@@ -67,6 +67,7 @@ app.use('/api/auth', authRoutes);
 
 // Health check route
 app.get('/', (req, res) => {
+  console.log('Root route hit');
   res.send('Project Manager App Backend is running.');
 });
 
