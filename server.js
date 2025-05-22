@@ -13,10 +13,7 @@ const server = http.createServer(app);
 
 // Middleware
 app.use(express.json());
-app.use(cors({
-  origin: process.env.CLIENT_URL,
-  credentials: true
-}));
+app.use(cors());
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI, {
