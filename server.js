@@ -12,8 +12,8 @@ const app = express();
 const server = http.createServer(app);
 
 // Middleware
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI, {
