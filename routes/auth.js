@@ -2,17 +2,33 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Invite = require('../models/Invite');
+const Project = require('../models/Project');
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
 // Register route
 router.post('/register', async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, inviteToken } = req.body;
   if (!name || !email || !password) return res.status(400).json({ error: 'Name, email and password required' });
   try {
     const hashed = await bcrypt.hash(password, 10);
     const user = await User.create({ name, email, password: hashed });
+
+    // Handle invite token if present
+    if (inviteToken) {
+      const invite = await Invite.findOne({ token: inviteToken, status: 'pending' });
+      if (!invite) {
+        return res.status(400).json({ error: 'Invalid or expired invite token.' });
+      }
+      // Add user to project
+      await Project.findByIdAndUpdate(invite.project, { $addToSet: { members: user._id } });
+      // Mark invite as accepted
+      invite.status = 'accepted';
+      await invite.save();
+    }
+
     res.status(201).json({ message: 'User created' });
   } catch (err) {
     res.status(400).json({ error: 'Email already exists' });
