@@ -19,6 +19,7 @@ async function createTask(req, res) {
       assignedTo: assignedUser || undefined,
       project,
       status: status || undefined,
+      owner: req.user.userId,
       attachments
     });
     await task.save();
