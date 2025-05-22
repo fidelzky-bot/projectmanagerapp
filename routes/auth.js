@@ -18,6 +18,7 @@ router.post('/register', async (req, res) => {
     res.status(400).json({ error: 'Email already exists' });
   }
 });
+
 // Login route
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
