@@ -4,6 +4,7 @@ const clerkAuth = require('../middleware/auth');
 const syncUser = require('../middleware/syncUser');
 const userController = require('../controllers/userController');
 const User = require('../models/User');
+const Project = require('../models/Project');
 
 // Get current authenticated user (from MongoDB)
 router.get('/me', clerkAuth, syncUser, userController.getMe);
@@ -32,6 +33,17 @@ router.get('/', async (req, res) => {
     res.json(users);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+// Get users for a specific project
+router.get('/byProject/:projectId', async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.projectId).populate('members', 'name email');
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+    res.json(project.members);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch team members' });
   }
 });
 
