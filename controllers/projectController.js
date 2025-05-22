@@ -51,6 +51,7 @@ async function updateProject(req, res) {
   }
 }
 
+
 // Delete a project
 async function deleteProject(req, res) {
   try {
