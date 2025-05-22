@@ -5,7 +5,7 @@ const clerkAuth = require('../middleware/auth');
 const syncUser = require('../middleware/syncUser');
 
 // Create a new project (protected)
-router.post('/', clerkAuth, syncUser, projectController.createProject);
+router.post('/', projectController.createProject);
 // Get all projects (public for testing)
 router.get('/', projectController.getProjects);
 // Get a single project by ID
