@@ -39,6 +39,7 @@ async function getTasks(req, res) {
       filter.project = req.query.project;
     }
     const tasks = await Task.find(filter).populate('assignedTo project');
+    console.log('Populated tasks:', tasks);
     res.json(tasks);
   } catch (err) {
     res.status(500).json({ error: err.message });
