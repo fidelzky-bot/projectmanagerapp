@@ -52,6 +52,7 @@ const usersRouter = require('./routes/users');
 const commentsRouter = require('./routes/comments');
 const notificationsRouter = require('./routes/notifications');
 const attachmentsRouter = require('./routes/attachments');
+const invitesRouter = require('./routes/invites');
 
 app.use('/api/projects', projectsRouter);
 app.use('/api/tasks', tasksRouter);
@@ -61,6 +62,7 @@ app.use('/api/notifications', notificationsRouter);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/attachments', attachmentsRouter);
 app.use('/api/auth', authRoutes);
+app.use('/api/invites', invitesRouter);
 
 // Health check route
 app.get('/', (req, res) => {
