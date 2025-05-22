@@ -5,15 +5,19 @@ const clerkAuth = require('../middleware/auth');
 const syncUser = require('../middleware/syncUser');
 const auth = require('../middleware/auth');
 const Project = require('../models/Project');
+const User = require('../models/User');
 
 // Create a new project (protected)
 router.post('/', auth, async (req, res) => {
   const { name, description } = req.body;
-  const project = await Project.create({
+  const userId = req.user.userId;
+  const project = new Project({
     name,
     description,
-    owner: req.user.userId
+    owner: userId,
+    members: [userId]
   });
+  await project.save();
   res.status(201).json(project);
 });
 
@@ -32,5 +36,21 @@ router.get('/:id', projectController.getProjectById);
 router.put('/:id', projectController.updateProject);
 // Delete a project
 router.delete('/:id', projectController.deleteProject);
+
+// Add a member to a project
+router.post('/:projectId/addMember', async (req, res) => {
+  const { userId } = req.body; // The user to add (should be their ObjectId)
+  try {
+    const project = await Project.findByIdAndUpdate(
+      req.params.projectId,
+      { $addToSet: { members: userId } }, // $addToSet avoids duplicates
+      { new: true }
+    ).populate('members', 'name email');
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+    res.json(project.members);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to add member' });
+  }
+});
 
 module.exports = router;
