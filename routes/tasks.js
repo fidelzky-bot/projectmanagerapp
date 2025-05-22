@@ -8,16 +8,7 @@ const Task = require('../models/Task');
 router.post('/', (req, res, next) => {
   console.log('POST /api/tasks hit');
   next();
-}, auth, async (req, res) => {
-  const { title, description, project } = req.body;
-  const task = await Task.create({
-    title,
-    description,
-    project,
-    owner: req.user.userId
-  });
-  res.status(201).json(task);
-});
+}, auth, taskController.createTask);
 
 // Get all tasks for the current user (protected)
 router.get('/', auth, async (req, res) => {
