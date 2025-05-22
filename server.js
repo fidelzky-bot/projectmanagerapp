@@ -7,16 +7,20 @@ const cors = require('cors');
 const http = require('http');
 const path = require('path');
 const { Server } = require('socket.io');
+const authRoutes = require('./routes/auth');
 
 const app = express();
 const server = http.createServer(app);
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: ['https://jmgprojectmanagerapp.netlify.app'],
+  credentials: true
+}));
 app.use(express.json());
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI, {
+mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
@@ -59,6 +63,7 @@ app.use('/api/comments', commentsRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/attachments', attachmentsRouter);
+app.use('/api/auth', authRoutes);
 
 // Health check route
 app.get('/', (req, res) => {
