@@ -1,11 +1,27 @@
 const express = require('express');
 const router = express.Router();
 const taskController = require('../controllers/taskController');
+const auth = require('../middleware/auth');
+const Task = require('../models/Task');
 
-// Create a new task (protected)
-router.post('/', taskController.createTask);
-// Get all tasks (optionally filter by project)
-router.get('/', taskController.getTasks);
+// Create a task (protected)
+router.post('/', auth, async (req, res) => {
+  const { title, description, project } = req.body;
+  const task = await Task.create({
+    title,
+    description,
+    project,
+    owner: req.user.userId
+  });
+  res.status(201).json(task);
+});
+
+// Get all tasks for the current user (protected)
+router.get('/', auth, async (req, res) => {
+  const tasks = await Task.find({ owner: req.user.userId });
+  res.json(tasks);
+});
+
 // Get a single task by ID
 router.get('/:id', taskController.getTaskById);
 // Update a task
