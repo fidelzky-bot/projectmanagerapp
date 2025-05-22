@@ -25,4 +25,14 @@ router.put('/me', clerkAuth, async (req, res) => {
   res.json(user);
 });
 
+// Get all users (for assignee dropdown)
+router.get('/', async (req, res) => {
+  try {
+    const users = await User.find({}, 'name email');
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
 module.exports = router;
