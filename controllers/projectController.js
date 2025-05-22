@@ -3,12 +3,9 @@ const Project = require('../models/Project');
 // Create a new project
 async function createProject(req, res) {
   try {
-    const { name, description, members = [] } = req.body;
-    // Always set owner to the authenticated MongoDB user
-    const owner = req.mongoUser._id;
-    // Ensure owner is in members array
-    const uniqueMembers = Array.from(new Set([owner.toString(), ...members.map(m => m.toString())]));
-    const project = new Project({ name, description, owner, members: uniqueMembers });
+    const { name, description, members = [], owner } = req.body;
+    // Just use the data from the request body
+    const project = new Project({ name, description, members, owner });
     await project.save();
     res.status(201).json(project);
   } catch (err) {
