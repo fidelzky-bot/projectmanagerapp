@@ -8,8 +8,8 @@ async function createTask(req, res) {
     if (!project) {
       return res.status(400).json({ error: 'Project is required' });
     }
-    // Default assignedTo to the authenticated user if not provided
-    const assignedUser = assignedTo || req.mongoUser._id;
+    // Just use assignedTo from the request body
+    const assignedUser = assignedTo || null;
     const task = new Task({ title, description, dueDate, priority, assignedTo: assignedUser, project, status, attachments });
     await task.save();
     await task.populate('assignedTo project');
