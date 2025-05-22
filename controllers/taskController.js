@@ -10,7 +10,16 @@ async function createTask(req, res) {
     }
     // Just use assignedTo from the request body
     const assignedUser = assignedTo || null;
-    const task = new Task({ title, description, dueDate, priority, assignedTo: assignedUser, project, status, attachments });
+    const task = new Task({
+      title,
+      description,
+      dueDate: dueDate || undefined,
+      priority: priority || undefined,
+      assignedTo: assignedUser || undefined,
+      project,
+      status: status || undefined,
+      attachments
+    });
     await task.save();
     await task.populate('assignedTo project');
     io.emit('task:updated', task);
