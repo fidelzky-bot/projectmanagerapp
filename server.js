@@ -68,6 +68,10 @@ app.get('/', (req, res) => {
   res.send('Project Manager App Backend is running.');
 });
 
+app.get('/test', (req, res) => {
+  res.json({ message: "Test route works!" });
+});
+
 // 404 handler (should be last)
 app.use((req, res) => {
   res.status(404).send('Not Found');
