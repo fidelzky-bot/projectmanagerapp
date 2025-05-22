@@ -1,11 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const taskController = require('../controllers/taskController');
-const clerkAuth = require('../middleware/auth');
-const syncUser = require('../middleware/syncUser');
 
 // Create a new task (protected)
-router.post('/', clerkAuth, syncUser, taskController.createTask);
+router.post('/', taskController.createTask);
 // Get all tasks (optionally filter by project)
 router.get('/', taskController.getTasks);
 // Get a single task by ID
