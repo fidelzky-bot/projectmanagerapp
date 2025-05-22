@@ -5,7 +5,10 @@ const auth = require('../middleware/auth');
 const Task = require('../models/Task');
 
 // Create a task (protected)
-router.post('/', auth, async (req, res) => {
+router.post('/', (req, res, next) => {
+  console.log('POST /api/tasks hit');
+  next();
+}, auth, async (req, res) => {
   const { title, description, project } = req.body;
   const task = await Task.create({
     title,
