@@ -4,6 +4,7 @@ const { io } = require('../server');
 // Create a new task
 async function createTask(req, res) {
   try {
+    console.log('Received body:', req.body);
     const { title, description, dueDate, priority, assignedTo, project, status, attachments } = req.body;
     if (!project) {
       return res.status(400).json({ error: 'Project is required' });
