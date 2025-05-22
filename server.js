@@ -48,17 +48,29 @@ io.on('connection', (socket) => {
 module.exports.io = io;
 
 // API routes
-app.use('/api/projects', require('./routes/projects'));
-app.use('/api/tasks', require('./routes/tasks'));
-app.use('/api/users', require('./routes/users'));
-app.use('/api/comments', require('./routes/comments'));
-app.use('/api/notifications', require('./routes/notifications'));
+const projectsRouter = require('./routes/projects');
+const tasksRouter = require('./routes/tasks');
+const usersRouter = require('./routes/users');
+const commentsRouter = require('./routes/comments');
+const notificationsRouter = require('./routes/notifications');
+const attachmentsRouter = require('./routes/attachments');
+
+app.use('/api/projects', projectsRouter);
+app.use('/api/tasks', tasksRouter);
+app.use('/api/users', usersRouter);
+app.use('/api/comments', commentsRouter);
+app.use('/api/notifications', notificationsRouter);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use('/api/attachments', require('./routes/attachments'));
+app.use('/api/attachments', attachmentsRouter);
 
 // Health check route
 app.get('/', (req, res) => {
   res.send('Project Manager App Backend is running.');
+});
+
+// 404 handler (should be last)
+app.use((req, res) => {
+  res.status(404).send('Not Found');
 });
 
 const PORT = process.env.PORT || 5000;

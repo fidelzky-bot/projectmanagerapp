@@ -15,4 +15,8 @@ router.put('/:id', projectController.updateProject);
 // Delete a project
 router.delete('/:id', projectController.deleteProject);
 
+router.get('/', (req, res) => {
+  res.json([{ name: "Test Project" }]);
+});
+
 module.exports = router;
