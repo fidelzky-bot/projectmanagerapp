@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Asana-Inspired Project & Task Management Backend
 
 This is the backend for a modern, collaborative project & task management web app, inspired by Asana. Built with Node.js, Express, MongoDB, and Socket.IO.
@@ -58,3 +59,6 @@ Server will run on `http://localhost:5000` by default.
 
 ## License
 MIT
+=======
+# projectmanagerapp
+>>>>>>> 1229982f031bda2336220cea457acc06402d564c
