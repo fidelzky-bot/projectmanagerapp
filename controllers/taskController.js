@@ -98,7 +98,8 @@ async function updateTask(req, res) {
       byName: updater ? updater.name : 'User',
       time: new Date(),
       project: task.project._id || task.project,
-      status: task.status
+      status: task.status,
+      oldStatus: oldTask ? oldTask.status : undefined
     });
     io.emit('task:updated', task);
     res.json(task);
