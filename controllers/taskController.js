@@ -72,6 +72,7 @@ async function getTaskById(req, res) {
 async function updateTask(req, res) {
   try {
     const { title, description, dueDate, priority, assignedTo, status, attachments } = req.body;
+    const oldTask = await Task.findById(req.params.id);
     const task = await Task.findByIdAndUpdate(
       req.params.id,
       { title, description, dueDate, priority, assignedTo, status, attachments },
@@ -79,8 +80,18 @@ async function updateTask(req, res) {
     ).populate('assignedTo project');
     if (!task) return res.status(404).json({ error: 'Task not found' });
     const updater = await User.findById(req.user.userId);
+    // Determine if only status changed
+    let notificationType = 'edited';
+    if (oldTask && oldTask.status !== status &&
+        oldTask.title === title &&
+        oldTask.description === description &&
+        String(oldTask.dueDate) === String(dueDate) &&
+        oldTask.priority === priority &&
+        String(oldTask.assignedTo) === String(assignedTo)) {
+      notificationType = 'moved';
+    }
     io.emit('notification', {
-      type: 'moved',
+      type: notificationType,
       taskId: task._id,
       title: task.title,
       by: req.user.userId,
