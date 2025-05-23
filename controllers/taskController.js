@@ -1,5 +1,6 @@
 const Task = require('../models/Task');
 const { io } = require('../server');
+const User = require('../models/User');
 
 // Create a new task
 async function createTask(req, res) {
@@ -24,6 +25,16 @@ async function createTask(req, res) {
     });
     await task.save();
     await task.populate('assignedTo project');
+    const creator = await User.findById(req.user.userId);
+    io.emit('notification', {
+      type: 'created',
+      taskId: task._id,
+      title: task.title,
+      by: req.user.userId,
+      byName: creator ? creator.name : 'User',
+      time: new Date(),
+      project: task.project._id || task.project
+    });
     io.emit('task:updated', task);
     res.status(201).json(task);
   } catch (err) {
@@ -67,6 +78,17 @@ async function updateTask(req, res) {
       { new: true }
     ).populate('assignedTo project');
     if (!task) return res.status(404).json({ error: 'Task not found' });
+    const updater = await User.findById(req.user.userId);
+    io.emit('notification', {
+      type: 'moved',
+      taskId: task._id,
+      title: task.title,
+      by: req.user.userId,
+      byName: updater ? updater.name : 'User',
+      time: new Date(),
+      project: task.project._id || task.project,
+      status: task.status
+    });
     io.emit('task:updated', task);
     res.json(task);
   } catch (err) {
@@ -79,6 +101,16 @@ async function deleteTask(req, res) {
   try {
     const task = await Task.findByIdAndDelete(req.params.id);
     if (!task) return res.status(404).json({ error: 'Task not found' });
+    const deleter = await User.findById(req.user.userId);
+    io.emit('notification', {
+      type: 'deleted',
+      taskId: task._id,
+      title: task.title,
+      by: req.user.userId,
+      byName: deleter ? deleter.name : 'User',
+      time: new Date(),
+      project: task.project._id || task.project
+    });
     res.json({ message: 'Task deleted' });
   } catch (err) {
     res.status(500).json({ error: err.message });
