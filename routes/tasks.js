@@ -25,10 +25,10 @@ router.get('/', auth, async (req, res) => {
 
 // Get a single task by ID
 router.get('/:id', taskController.getTaskById);
-// Update a task
-router.put('/:id', taskController.updateTask);
-// Delete a task
-router.delete('/:id', taskController.deleteTask);
+// Update a task (protected)
+router.put('/:id', auth, taskController.updateTask);
+// Delete a task (protected)
+router.delete('/:id', auth, taskController.deleteTask);
 
 // Add a comment to a task
 router.post('/:taskId/comments', auth, async (req, res) => {
