@@ -21,15 +21,13 @@ router.post('/', auth, async (req, res) => {
   res.status(201).json(project);
 });
 
-// Get all projects for the current user (protected)
+// Get all projects for the current user's team (protected)
 router.get('/', auth, async (req, res) => {
-  const userId = req.user.userId;
-  const projects = await Project.find({
-    $or: [
-      { owner: userId },
-      { members: userId }
-    ]
-  });
+  const user = await User.findById(req.user.userId);
+  if (!user || !user.team) {
+    return res.json([]);
+  }
+  const projects = await Project.find({ team: user.team });
   res.json(projects);
 });
 
