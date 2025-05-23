@@ -23,7 +23,13 @@ router.post('/', auth, async (req, res) => {
 
 // Get all projects for the current user (protected)
 router.get('/', auth, async (req, res) => {
-  const projects = await Project.find({ owner: req.user.userId });
+  const userId = req.user.userId;
+  const projects = await Project.find({
+    $or: [
+      { owner: userId },
+      { members: userId }
+    ]
+  });
   res.json(projects);
 });
 
