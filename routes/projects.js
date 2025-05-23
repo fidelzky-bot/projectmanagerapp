@@ -10,12 +10,16 @@ const User = require('../models/User');
 // Create a new project (protected)
 router.post('/', auth, async (req, res) => {
   const { name, description } = req.body;
-  const userId = req.user.userId;
+  const user = await User.findById(req.user.userId);
+  if (!user || !user.team) {
+    return res.status(400).json({ error: 'You must be part of a team to create a project.' });
+  }
   const project = new Project({
     name,
     description,
-    owner: userId,
-    members: [userId]
+    team: user.team,
+    createdBy: user._id,
+    status: 'active'
   });
   await project.save();
   res.status(201).json(project);
