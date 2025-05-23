@@ -15,6 +15,7 @@ const transporter = nodemailer.createTransport({
 
 // Create and send an invite
 async function createInvite(req, res) {
+  console.log('createInvite called', req.body);
   try {
     const { email, projectId } = req.body;
     if (!email || !projectId) {
@@ -36,7 +37,7 @@ async function createInvite(req, res) {
     });
     await invite.save();
     // Log the invite link (replace with email sending later)
-    const inviteLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/signup?inviteToken=${token}`;
+    const inviteLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/index.html?inviteToken=${token}`;
     console.log('Invite link:', inviteLink);
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
