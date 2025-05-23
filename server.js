@@ -53,6 +53,7 @@ const commentsRouter = require('./routes/comments');
 const notificationsRouter = require('./routes/notifications');
 const attachmentsRouter = require('./routes/attachments');
 const invitesRouter = require('./routes/invites');
+const teamsRouter = require('./routes/teams');
 
 app.use('/api/projects', projectsRouter);
 app.use('/api/tasks', tasksRouter);
@@ -63,6 +64,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/attachments', attachmentsRouter);
 app.use('/api/auth', authRoutes);
 app.use('/api/invites', invitesRouter);
+app.use('/api/teams', teamsRouter);
 
 // Health check route
 app.get('/', (req, res) => {

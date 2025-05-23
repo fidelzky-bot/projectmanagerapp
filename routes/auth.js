@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Invite = require('../models/Invite');
 const Project = require('../models/Project');
+const Team = require('../models/Team');
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
@@ -22,8 +23,13 @@ router.post('/register', async (req, res) => {
       if (!invite) {
         return res.status(400).json({ error: 'Invalid or expired invite token.' });
       }
-      // Add user to project
-      await Project.findByIdAndUpdate(invite.project, { $addToSet: { members: user._id } });
+      // Add user to team
+      await Team.findByIdAndUpdate(invite.team, { $addToSet: { members: user._id } });
+      // Update user with team info
+      await User.findByIdAndUpdate(user._id, { 
+        team: invite.team,
+        role: 'member'
+      });
       // Mark invite as accepted
       invite.status = 'accepted';
       await invite.save();

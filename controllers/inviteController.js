@@ -1,5 +1,5 @@
 const Invite = require('../models/Invite');
-const Project = require('../models/Project');
+const Team = require('../models/Team');
 const User = require('../models/User');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
@@ -13,38 +13,53 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Create and send an invite
+// Create and send a team invite
 async function createInvite(req, res) {
   console.log('createInvite called', req.body);
   try {
-    const { email, projectId } = req.body;
-    if (!email || !projectId) {
-      return res.status(400).json({ error: 'Email and projectId are required.' });
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required.' });
     }
-    // Check if project exists
-    const project = await Project.findById(projectId);
-    if (!project) {
-      return res.status(404).json({ error: 'Project not found.' });
+
+    // Get the user's team
+    const user = await User.findById(req.user.userId);
+    if (!user || !user.team) {
+      return res.status(400).json({ error: 'You must be part of a team to send invites.' });
     }
+
+    // Check if user is already in the team
+    const existingUser = await User.findOne({ email });
+    if (existingUser && existingUser.team && existingUser.team.toString() === user.team.toString()) {
+      return res.status(400).json({ error: 'User is already a member of your team.' });
+    }
+
     // Generate a unique token
     const token = crypto.randomBytes(24).toString('hex');
+    
     // Save invite
     const invite = new Invite({
       email,
-      project: projectId,
-      inviter: req.user.userId, // assumes auth middleware sets req.user
+      team: user.team,
+      inviter: req.user.userId,
       token
     });
     await invite.save();
-    // Log the invite link (replace with email sending later)
+
+    // Create invite link
     const inviteLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/index.html?inviteToken=${token}`;
-    console.log('Invite link:', inviteLink);
+    
+    // Send email
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
-      subject: 'You are invited to join a project!',
-      html: `<p>You have been invited to join a project. Click <a href="${inviteLink}">here</a> to sign up!</p>`
+      subject: 'You are invited to join a team!',
+      html: `
+        <p>You have been invited to join a team. Click <a href="${inviteLink}">here</a> to sign up!</p>
+        <p>Once you join, you'll have access to all team projects and can collaborate with team members.</p>
+      `
     });
+
     console.log('Invite email sent to:', email);
     res.status(201).json({ message: 'Invite sent!', inviteLink });
   } catch (err) {
