@@ -44,8 +44,10 @@ async function createInvite(req, res) {
       subject: 'You are invited to join a project!',
       html: `<p>You have been invited to join a project. Click <a href="${inviteLink}">here</a> to sign up!</p>`
     });
+    console.log('Invite email sent to:', email);
     res.status(201).json({ message: 'Invite sent!', inviteLink });
   } catch (err) {
+    console.error('Error sending invite email:', err);
     res.status(500).json({ error: err.message });
   }
 }
