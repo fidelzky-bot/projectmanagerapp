@@ -3,6 +3,7 @@ const router = express.Router();
 const taskController = require('../controllers/taskController');
 const auth = require('../middleware/auth');
 const Task = require('../models/Task');
+const Comment = require('../models/Comment');
 
 // Create a task (protected)
 router.post('/', (req, res, next) => {
@@ -26,5 +27,32 @@ router.get('/:id', taskController.getTaskById);
 router.put('/:id', taskController.updateTask);
 // Delete a task
 router.delete('/:id', taskController.deleteTask);
+
+// Add a comment to a task
+router.post('/:taskId/comments', auth, async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) return res.status(400).json({ error: 'Comment text is required' });
+    const comment = await Comment.create({
+      text,
+      task: req.params.taskId,
+      author: req.user.userId, // or whatever field you use for user
+      createdAt: new Date()
+    });
+    res.status(201).json(comment);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to add comment' });
+  }
+});
+
+// (Optional) Get comments for a task
+router.get('/:taskId/comments', auth, async (req, res) => {
+  try {
+    const comments = await Comment.find({ task: req.params.taskId }).populate('author', 'name email');
+    res.json(comments);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch comments' });
+  }
+});
 
 module.exports = router;
