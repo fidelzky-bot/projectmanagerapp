@@ -11,6 +11,8 @@ router.get('/me', clerkAuth, syncUser, userController.getMe);
 
 // Get current user profile
 router.get('/me', clerkAuth, async (req, res) => {
+  // Update lastActive
+  await User.findByIdAndUpdate(req.user.userId, { lastActive: new Date() });
   const user = await User.findById(req.user.userId).select('-password');
   res.json(user);
 });
@@ -39,7 +41,7 @@ router.get('/', async (req, res) => {
 // Get users for a specific project
 router.get('/byProject/:projectId', async (req, res) => {
   try {
-    const project = await Project.findById(req.params.projectId).populate('members', 'name email');
+    const project = await Project.findById(req.params.projectId).populate('members', 'name email lastActive');
     if (!project) return res.status(404).json({ error: 'Project not found' });
     res.json(project.members);
   } catch (err) {
