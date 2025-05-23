@@ -10,9 +10,13 @@ router.post('/', (req, res, next) => {
   next();
 }, auth, taskController.createTask);
 
-// Get all tasks for the current user (protected)
+// Get all tasks for a project
 router.get('/', auth, async (req, res) => {
-  const tasks = await Task.find({ owner: req.user.userId });
+  const { project } = req.query;
+  const filter = {};
+  if (project) filter.project = project;
+  // Optionally: check if user is a member of the project here
+  const tasks = await Task.find(filter).populate('assignedTo project');
   res.json(tasks);
 });
 
