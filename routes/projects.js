@@ -6,6 +6,7 @@ const syncUser = require('../middleware/syncUser');
 const auth = require('../middleware/auth');
 const Project = require('../models/Project');
 const User = require('../models/User');
+const { io } = require('../server');
 
 // Create a new project (protected)
 router.post('/', auth, async (req, res) => {
@@ -22,6 +23,15 @@ router.post('/', auth, async (req, res) => {
     status: 'active'
   });
   await project.save();
+  // Emit notification for project creation
+  io.emit('notification', {
+    type: 'created_project',
+    projectId: project._id,
+    title: project.name,
+    by: user._id,
+    byName: user.name,
+    time: new Date()
+  });
   res.status(201).json(project);
 });
 
