@@ -8,16 +8,19 @@ async function createProject(req, res) {
     const { name, description, members = [], createdBy } = req.body;
     // Always use the authenticated user as creator if createdBy is not provided
     const creatorId = createdBy || req.user?.userId || req.mongoUser?._id;
+    console.log('Creating project with creatorId:', creatorId);
     const project = new Project({ name, description, members, createdBy: creatorId });
     await project.save();
     // Assign creator as admin
-    await ProjectUserRole.create({
+    const adminRole = await ProjectUserRole.create({
       projectId: project._id,
       userId: creatorId,
       role: 'admin'
     });
+    console.log('Admin role created:', adminRole);
     res.status(201).json(project);
   } catch (err) {
+    console.error('Error in createProject:', err);
     res.status(400).json({ error: err.message });
   }
 }
