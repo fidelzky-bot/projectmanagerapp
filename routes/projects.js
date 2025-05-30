@@ -7,6 +7,7 @@ const auth = require('../middleware/auth');
 const Project = require('../models/Project');
 const User = require('../models/User');
 const { io } = require('../server');
+const projectUserRoleController = require('../controllers/projectUserRoleController');
 
 // Create a new project (protected)
 router.post('/', auth, async (req, res) => {
@@ -70,5 +71,10 @@ router.post('/:projectId/addMember', async (req, res) => {
     res.status(500).json({ error: 'Failed to add member' });
   }
 });
+
+// Project user roles
+router.get('/:projectId/roles', projectUserRoleController.getProjectRoles);
+router.post('/:projectId/roles', projectUserRoleController.setUserRole);
+router.delete('/:projectId/roles', projectUserRoleController.removeUserRole);
 
 module.exports = router;
