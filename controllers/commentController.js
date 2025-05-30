@@ -1,12 +1,26 @@
 const Comment = require('../models/Comment');
 const { io } = require('../server');
+const ProjectUserRole = require('../models/ProjectUserRole');
+
+// Helper to get user role for a project
+async function getUserRole(userId, projectId) {
+  const role = await ProjectUserRole.findOne({ userId, projectId });
+  return role ? role.role : 'viewer';
+}
 
 // Create a new comment
 async function createComment(req, res) {
   try {
     const { text, task } = req.body;
     if (!task) return res.status(400).json({ error: 'Task is required' });
-    const author = req.mongoUser._id;
+    // Find the project for the task
+    const taskDoc = await require('../models/Task').findById(task);
+    if (!taskDoc) return res.status(404).json({ error: 'Task not found' });
+    const userRole = await getUserRole(req.mongoUser?._id || req.user.userId, taskDoc.project);
+    if (!['admin', 'editor', 'commenter'].includes(userRole)) {
+      return res.status(403).json({ error: 'You do not have permission to comment.' });
+    }
+    const author = req.mongoUser?._id || req.user.userId;
     const comment = new Comment({ text, author, task });
     await comment.save();
     await comment.populate('author');

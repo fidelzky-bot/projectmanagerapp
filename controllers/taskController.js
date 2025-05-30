@@ -1,6 +1,13 @@
 const Task = require('../models/Task');
 const { io } = require('../server');
 const User = require('../models/User');
+const ProjectUserRole = require('../models/ProjectUserRole');
+
+// Helper to get user role for a project
+async function getUserRole(userId, projectId) {
+  const role = await ProjectUserRole.findOne({ userId, projectId });
+  return role ? role.role : 'viewer';
+}
 
 // Create a new task
 async function createTask(req, res) {
@@ -9,6 +16,10 @@ async function createTask(req, res) {
     const { title, description, dueDate, priority, assignedTo, project, status, attachments } = req.body;
     if (!project) {
       return res.status(400).json({ error: 'Project is required' });
+    }
+    const userRole = await getUserRole(req.user.userId, project);
+    if (userRole !== 'admin' && userRole !== 'editor') {
+      return res.status(403).json({ error: 'You do not have permission to create tasks.' });
     }
     // Just use assignedTo from the request body
     const assignedUser = assignedTo || null;
@@ -73,6 +84,12 @@ async function updateTask(req, res) {
   try {
     const { title, description, dueDate, priority, assignedTo, status, attachments } = req.body;
     const oldTask = await Task.findById(req.params.id);
+    if (!oldTask) return res.status(404).json({ error: 'Task not found' });
+    const userRole = await getUserRole(req.user.userId, oldTask.project);
+    // Only admin/editor can update, but only admin/editor can move/edit, and only admin can delete
+    if (userRole !== 'admin' && userRole !== 'editor') {
+      return res.status(403).json({ error: 'You do not have permission to update tasks.' });
+    }
     const task = await Task.findByIdAndUpdate(
       req.params.id,
       { title, description, dueDate, priority, assignedTo, status, attachments },
@@ -111,8 +128,13 @@ async function updateTask(req, res) {
 // Delete a task
 async function deleteTask(req, res) {
   try {
-    const task = await Task.findByIdAndDelete(req.params.id);
+    const task = await Task.findById(req.params.id);
     if (!task) return res.status(404).json({ error: 'Task not found' });
+    const userRole = await getUserRole(req.user.userId, task.project);
+    if (userRole !== 'admin') {
+      return res.status(403).json({ error: 'Only project admins can delete tasks.' });
+    }
+    await Task.findByIdAndDelete(req.params.id);
     const deleter = await User.findById(req.user.userId);
     io.emit('notification', {
       type: 'deleted',
