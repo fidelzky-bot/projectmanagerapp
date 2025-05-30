@@ -1,5 +1,6 @@
 const Project = require('../models/Project');
 const User = require('../models/User');
+const ProjectUserRole = require('../models/ProjectUserRole');
 
 // Create a new project
 async function createProject(req, res) {
@@ -8,6 +9,12 @@ async function createProject(req, res) {
     // Just use the data from the request body
     const project = new Project({ name, description, members, owner });
     await project.save();
+    // Assign creator as admin
+    await ProjectUserRole.create({
+      projectId: project._id,
+      userId: owner || req.user.userId,
+      role: 'admin'
+    });
     res.status(201).json(project);
   } catch (err) {
     res.status(400).json({ error: err.message });
