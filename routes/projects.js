@@ -73,8 +73,8 @@ router.post('/:projectId/addMember', async (req, res) => {
 });
 
 // Project user roles
-router.get('/:projectId/roles', projectUserRoleController.getProjectRoles);
-router.post('/:projectId/roles', projectUserRoleController.setUserRole);
-router.delete('/:projectId/roles', projectUserRoleController.removeUserRole);
+router.get('/:projectId/roles', auth, projectUserRoleController.getProjectRoles);
+router.post('/:projectId/roles', auth, projectUserRoleController.setUserRole);
+router.delete('/:projectId/roles', auth, projectUserRoleController.removeUserRole);
 
 module.exports = router;
