@@ -5,10 +5,10 @@ const ProjectUserRole = require('../models/ProjectUserRole');
 // Create a new project
 async function createProject(req, res) {
   try {
-    const { name, description, members = [], owner } = req.body;
-    // Always use the authenticated user as creator if owner is not provided
-    const creatorId = owner || req.user?.userId || req.mongoUser?._id;
-    const project = new Project({ name, description, members, owner: creatorId });
+    const { name, description, members = [], createdBy } = req.body;
+    // Always use the authenticated user as creator if createdBy is not provided
+    const creatorId = createdBy || req.user?.userId || req.mongoUser?._id;
+    const project = new Project({ name, description, members, createdBy: creatorId });
     await project.save();
     // Assign creator as admin
     await ProjectUserRole.create({
