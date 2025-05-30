@@ -10,31 +10,7 @@ const { io } = require('../server');
 const projectUserRoleController = require('../controllers/projectUserRoleController');
 
 // Create a new project (protected)
-router.post('/', auth, async (req, res) => {
-  const { name, description } = req.body;
-  const user = await User.findById(req.user.userId);
-  if (!user || !user.team) {
-    return res.status(400).json({ error: 'You must be part of a team to create a project.' });
-  }
-  const project = new Project({
-    name,
-    description,
-    team: user.team,
-    createdBy: user._id,
-    status: 'active'
-  });
-  await project.save();
-  // Emit notification for project creation
-  io.emit('notification', {
-    type: 'created_project',
-    projectId: project._id,
-    title: project.name,
-    by: user._id,
-    byName: user.name,
-    time: new Date()
-  });
-  res.status(201).json(project);
-});
+router.post('/', auth, projectController.createProject);
 
 // Get all projects for the current user's team (protected)
 router.get('/', auth, async (req, res) => {
