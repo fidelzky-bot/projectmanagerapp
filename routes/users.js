@@ -1,16 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const clerkAuth = require('../middleware/auth');
+const auth = require('../middleware/auth');
 const syncUser = require('../middleware/syncUser');
 const userController = require('../controllers/userController');
 const User = require('../models/User');
 const Project = require('../models/Project');
 
 // Get current authenticated user (from MongoDB)
-router.get('/me', clerkAuth, syncUser, userController.getMe);
+router.get('/me', auth, async (req, res) => {
+  // Update lastActive
+  await User.findByIdAndUpdate(req.user.userId, { lastActive: new Date() });
+  const user = await User.findById(req.user.userId).select('-password');
+  res.json({ user });
+});
 
 // Get current user profile
-router.get('/me', clerkAuth, async (req, res) => {
+router.get('/me', auth, async (req, res) => {
   // Update lastActive
   await User.findByIdAndUpdate(req.user.userId, { lastActive: new Date() });
   const user = await User.findById(req.user.userId).select('-password');
@@ -18,7 +23,7 @@ router.get('/me', clerkAuth, async (req, res) => {
 });
 
 // Update current user profile
-router.put('/me', clerkAuth, async (req, res) => {
+router.put('/me', auth, async (req, res) => {
   const { name, contact } = req.body;
   const user = await User.findByIdAndUpdate(
     req.user.userId,
