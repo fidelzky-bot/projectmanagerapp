@@ -8,11 +8,11 @@ console.log('projectController.js loaded');
 async function createProject(req, res) {
   console.log('createProject controller called');
   try {
-    const { name, description, members = [], createdBy } = req.body;
+    const { name, description, members = [], createdBy, team } = req.body;
     // Always use the authenticated user as creator if createdBy is not provided
     const creatorId = createdBy || req.user?.userId || req.mongoUser?._id;
     console.log('Creating project with creatorId:', creatorId);
-    const project = new Project({ name, description, members, createdBy: creatorId });
+    const project = new Project({ name, description, members, createdBy: creatorId, team });
     await project.save();
     // Assign creator as admin
     const adminRole = await ProjectUserRole.create({
