@@ -2,8 +2,11 @@ const Project = require('../models/Project');
 const User = require('../models/User');
 const ProjectUserRole = require('../models/ProjectUserRole');
 
+console.log('projectController.js loaded');
+
 // Create a new project
 async function createProject(req, res) {
+  console.log('createProject controller called');
   try {
     const { name, description, members = [], createdBy } = req.body;
     // Always use the authenticated user as creator if createdBy is not provided
