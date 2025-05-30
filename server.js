@@ -55,7 +55,15 @@ const attachmentsRouter = require('./routes/attachments');
 const invitesRouter = require('./routes/invites');
 const teamsRouter = require('./routes/teams');
 
-app.use('/api/projects', projectsRouter);
+console.log('Server file loaded and running latest code!');
+
+app.use('/api/projects', (req, res, next) => {
+  if (req.method === 'POST') {
+    console.log('POST /api/projects called');
+  }
+  next();
+}, projectsRouter);
+
 app.use('/api/tasks', tasksRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/comments', commentsRouter);
