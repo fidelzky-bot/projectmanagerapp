@@ -42,14 +42,22 @@ async function createTask(req, res) {
     
     // Create notification for assigned user if any
     if (assignedUser) {
-      await createNotification({
-        user: assignedUser,
-        type: 'task',
+      await sendProjectNotifications({
+        type: 'tasksAdded',
         message: `You have been assigned to task: ${title}`,
         entityId: task._id,
         entityType: 'Task',
         projectId: project,
-        fromUser: req.user.userId
+        byUser: req.user.userId,
+        extra: {
+          action: 'assigned',
+          taskId: task._id,
+          title: task.title,
+          by: req.user.userId,
+          byName: creator ? creator.name : 'User',
+          time: new Date(),
+          project: task.project._id || task.project
+        }
       });
     }
     

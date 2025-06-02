@@ -27,46 +27,6 @@ async function markAsRead(req, res) {
   }
 }
 
-// Utility: Create a notification (for use in other controllers)
-async function createNotification({ user, type, message, entityId, entityType, projectId, fromUser }) {
-  try {
-    // Get notification settings for the recipient
-    const settings = await NotificationSettings.findOne({ userId: user, projectId });
-    
-    // Check if the recipient wants notifications from this user
-    if (fromUser) {
-      const shouldNotify = settings?.teamMemberPreferences?.find(
-        pref => pref.memberId.toString() === fromUser.toString()
-      )?.receiveNotifications;
-      
-      if (shouldNotify === false) {
-        return null; // Don't send notification if user has disabled notifications from this member
-      }
-    }
-    
-    // Check if the notification type is enabled in settings
-    if (settings) {
-      const typeEnabled = {
-        'status': settings.statusUpdates,
-        'message': settings.messages,
-        'task': settings.tasksAdded,
-        'comment': settings.comments
-      }[type];
-      
-      if (typeEnabled === false) {
-        return null; // Don't send notification if this type is disabled
-      }
-    }
-    
-    const notification = await Notification.create({ user, type, message, entityId, entityType });
-    io.emit('notification:new', notification);
-    return notification;
-  } catch (err) {
-    console.error('Error creating notification:', err);
-    return null;
-  }
-}
-
 // Utility: Send notifications to all users in the relevant notification settings array
 async function sendProjectNotifications({ type, message, entityId, entityType, projectId, byUser, extra = {} }) {
   try {
@@ -104,6 +64,5 @@ async function sendProjectNotifications({ type, message, entityId, entityType, p
 module.exports = {
   getNotifications,
   markAsRead,
-  createNotification,
   sendProjectNotifications
 };
