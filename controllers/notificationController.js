@@ -75,9 +75,10 @@ async function sendProjectNotifications({ type, message, entityId, entityType, p
     console.log('NotificationSettings found:', settings);
     if (!settings) return;
     let userIds = [];
-    if (type === 'statusUpdates' || type === 'tasksAdded') {
-      // Both use the same recipients
-      userIds = Array.from(new Set([...(settings.statusUpdates || []), ...(settings.tasksAdded || [])]));
+    if (type === 'statusUpdates') {
+      userIds = settings.statusUpdates || [];
+    } else if (type === 'tasksAdded') {
+      userIds = settings.tasksAdded || [];
     } else if (type === 'messages') {
       userIds = settings.messages || [];
     } else if (type === 'comments') {
