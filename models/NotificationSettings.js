@@ -1,16 +1,11 @@
 const mongoose = require('mongoose');
 
 const NotificationSettingsSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true },
-  statusUpdates: { type: Boolean, default: false },
-  messages: { type: Boolean, default: false },
-  tasksAdded: { type: Boolean, default: false },
-  comments: { type: Boolean, default: false },
-  teamMemberPreferences: [{
-    memberId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    receiveNotifications: { type: Boolean, default: true }
-  }]
+  projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true, unique: true },
+  statusUpdates: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  messages: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  tasksAdded: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  comments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
 });
 
 module.exports = mongoose.model('NotificationSettings', NotificationSettingsSchema); 
