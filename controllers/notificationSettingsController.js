@@ -17,6 +17,9 @@ async function getSettings(req, res) {
       return res.status(404).json({ error: 'Project not found' });
     }
 
+    // Defensive: ensure project.team is always an array
+    const teamArray = Array.isArray(project.team) ? project.team : [];
+
     // Get or create notification settings
     let settings = await NotificationSettings.findOne({ userId, projectId });
     if (!settings) {
@@ -25,7 +28,7 @@ async function getSettings(req, res) {
     }
 
     // Get team members with their notification preferences
-    const teamMembers = await Promise.all(project.team.map(async (member) => {
+    const teamMembers = await Promise.all(teamArray.map(async (member) => {
       const memberSettings = await NotificationSettings.findOne({ 
         userId: member._id, 
         projectId 
