@@ -67,8 +67,39 @@ async function createNotification({ user, type, message, entityId, entityType, p
   }
 }
 
+// Utility: Send notifications to all users in the relevant notification settings array
+async function sendProjectNotifications({ type, message, entityId, entityType, projectId, byUser, extra = {} }) {
+  try {
+    const settings = await NotificationSettings.findOne({ projectId });
+    if (!settings) return;
+    let userIds = [];
+    if (type === 'statusUpdates' || type === 'tasksAdded') {
+      // Both use the same recipients
+      userIds = Array.from(new Set([...(settings.statusUpdates || []), ...(settings.tasksAdded || [])]));
+    } else if (type === 'messages') {
+      userIds = settings.messages || [];
+    } else if (type === 'comments') {
+      userIds = settings.comments || [];
+    }
+    for (const userId of userIds) {
+      const notification = await Notification.create({
+        user: userId,
+        type,
+        message,
+        entityId,
+        entityType,
+        ...extra
+      });
+      io.emit('notification:new', notification);
+    }
+  } catch (err) {
+    console.error('Error sending project notifications:', err);
+  }
+}
+
 module.exports = {
   getNotifications,
   markAsRead,
-  createNotification
+  createNotification,
+  sendProjectNotifications
 };

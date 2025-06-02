@@ -6,6 +6,7 @@ const Task = require('../models/Task');
 const Comment = require('../models/Comment');
 const { io } = require('../server');
 const User = require('../models/User');
+const { sendProjectNotifications } = require('../controllers/notificationController');
 
 // Create a task (protected)
 router.post('/', (req, res, next) => {
@@ -41,17 +42,24 @@ router.post('/:taskId/comments', auth, async (req, res) => {
       author: req.user.userId, // or whatever field you use for user
       createdAt: new Date()
     });
-    // Emit notification
+    // Notify users for comments
     const user = await User.findById(req.user.userId);
     const task = await Task.findById(req.params.taskId);
-    io.emit('notification', {
-      type: 'commented',
-      taskId: comment.task,
-      title: task ? task.title : '',
-      by: req.user.userId,
-      byName: user ? user.name : 'User',
-      time: new Date(),
-      project: task && (task.project._id || task.project)
+    await sendProjectNotifications({
+      type: 'comments',
+      message: `New comment on task: ${task ? task.title : ''}`,
+      entityId: comment.task,
+      entityType: 'Task',
+      projectId: task && (task.project._id || task.project),
+      byUser: req.user.userId,
+      extra: {
+        taskId: comment.task,
+        title: task ? task.title : '',
+        by: req.user.userId,
+        byName: user ? user.name : 'User',
+        time: new Date(),
+        project: task && (task.project._id || task.project)
+      }
     });
     res.status(201).json(comment);
   } catch (err) {
