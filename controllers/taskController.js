@@ -62,6 +62,7 @@ async function createTask(req, res) {
       projectId: project,
       byUser: req.user.userId,
       extra: {
+        action: 'created',
         taskId: task._id,
         title: task.title,
         by: req.user.userId,
@@ -132,6 +133,7 @@ async function updateTask(req, res) {
       projectId: task.project._id || task.project,
       byUser: req.user.userId,
       extra: {
+        action: 'updated',
         taskId: task._id,
         title: task.title,
         by: req.user.userId,

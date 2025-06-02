@@ -53,6 +53,7 @@ router.post('/:taskId/comments', auth, async (req, res) => {
       projectId: task && (task.project._id || task.project),
       byUser: req.user.userId,
       extra: {
+        action: 'commented',
         taskId: comment.task,
         title: task ? task.title : '',
         by: req.user.userId,
