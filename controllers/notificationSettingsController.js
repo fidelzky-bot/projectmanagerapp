@@ -11,7 +11,9 @@ async function getSettings(req, res) {
     
     // Get project team members
     const project = await Project.findById(projectId).populate('team');
+    console.log('Fetched project:', project);
     if (!project) {
+      console.log('Project not found for projectId:', projectId);
       return res.status(404).json({ error: 'Project not found' });
     }
 
@@ -39,11 +41,13 @@ async function getSettings(req, res) {
       };
     }));
 
+    console.log('Returning notification settings:', { ...settings.toObject(), teamMembers });
     res.json({
       ...settings.toObject(),
       teamMembers
     });
   } catch (err) {
+    console.log('Error in getSettings:', err);
     res.status(400).json({ error: err.message });
   }
 }
