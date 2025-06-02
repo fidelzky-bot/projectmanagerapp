@@ -9,16 +9,16 @@ async function getSettings(req, res) {
     const { projectId } = req.params;
     const userId = req.user.userId;
     
-    // Get project team members
-    const project = await Project.findById(projectId).populate('team');
+    // Get project and populate team with members
+    const project = await Project.findById(projectId).populate({ path: 'team', populate: { path: 'members' } });
     console.log('Fetched project:', project);
     if (!project) {
       console.log('Project not found for projectId:', projectId);
       return res.status(404).json({ error: 'Project not found' });
     }
 
-    // Defensive: ensure project.team is always an array
-    const teamArray = Array.isArray(project.team) ? project.team : [];
+    // Defensive: ensure project.team.members is always an array
+    const teamArray = Array.isArray(project.team?.members) ? project.team.members : [];
 
     // Get or create notification settings
     let settings = await NotificationSettings.findOne({ userId, projectId });
