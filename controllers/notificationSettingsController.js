@@ -5,6 +5,7 @@ const Project = require('../models/Project');
 // Get notification settings for a user and project
 async function getSettings(req, res) {
   try {
+    console.log('getSettings called', req.params, req.user);
     const { projectId } = req.params;
     const userId = req.user.userId;
     
