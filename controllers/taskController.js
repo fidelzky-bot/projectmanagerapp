@@ -2,6 +2,7 @@ const Task = require('../models/Task');
 const { io } = require('../server');
 const User = require('../models/User');
 const ProjectUserRole = require('../models/ProjectUserRole');
+const Notification = require('../models/Notification');
 
 // Helper to get user role for a project
 async function getUserRole(userId, projectId) {
@@ -37,6 +38,20 @@ async function createTask(req, res) {
     await task.save();
     await task.populate('assignedTo project');
     const creator = await User.findById(req.user.userId);
+    
+    // Create notification for assigned user if any
+    if (assignedUser) {
+      await createNotification({
+        user: assignedUser,
+        type: 'task',
+        message: `You have been assigned to task: ${title}`,
+        entityId: task._id,
+        entityType: 'Task',
+        projectId: project,
+        fromUser: req.user.userId
+      });
+    }
+    
     io.emit('notification', {
       type: 'created',
       taskId: task._id,
@@ -97,6 +112,20 @@ async function updateTask(req, res) {
     ).populate('assignedTo project');
     if (!task) return res.status(404).json({ error: 'Task not found' });
     const updater = await User.findById(req.user.userId);
+    
+    // Create notification for assigned user if changed
+    if (assignedTo && (!oldTask.assignedTo || assignedTo.toString() !== oldTask.assignedTo.toString())) {
+      await createNotification({
+        user: assignedTo,
+        type: 'task',
+        message: `You have been assigned to task: ${title}`,
+        entityId: task._id,
+        entityType: 'Task',
+        projectId: task.project._id || task.project,
+        fromUser: req.user.userId
+      });
+    }
+    
     // Determine if only status changed
     let notificationType = 'edited';
     if (oldTask && oldTask.status !== status &&
@@ -107,6 +136,7 @@ async function updateTask(req, res) {
         String(oldTask.assignedTo) === String(assignedTo)) {
       notificationType = 'moved';
     }
+    
     io.emit('notification', {
       type: notificationType,
       taskId: task._id,

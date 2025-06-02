@@ -6,7 +6,11 @@ const NotificationSettingsSchema = new mongoose.Schema({
   statusUpdates: { type: Boolean, default: false },
   messages: { type: Boolean, default: false },
   tasksAdded: { type: Boolean, default: false },
-  comments: { type: Boolean, default: false }
+  comments: { type: Boolean, default: false },
+  teamMemberPreferences: [{
+    memberId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    receiveNotifications: { type: Boolean, default: true }
+  }]
 });
 
 module.exports = mongoose.model('NotificationSettings', NotificationSettingsSchema); 
