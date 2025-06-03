@@ -34,14 +34,6 @@ router.get('/me', auth, async (req, res) => {
   // Update lastActive
   await User.findByIdAndUpdate(req.user.userId, { lastActive: new Date() });
   const user = await User.findById(req.user.userId).select('-password');
-  res.json({ user });
-});
-
-// Get current user profile
-router.get('/me', auth, async (req, res) => {
-  // Update lastActive
-  await User.findByIdAndUpdate(req.user.userId, { lastActive: new Date() });
-  const user = await User.findById(req.user.userId).select('-password');
   res.json(user);
 });
 
