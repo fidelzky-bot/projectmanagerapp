@@ -51,7 +51,6 @@ const tasksRouter = require('./routes/tasks');
 const usersRouter = require('./routes/users');
 const commentsRouter = require('./routes/comments');
 const notificationsRouter = require('./routes/notifications');
-const attachmentsRouter = require('./routes/attachments');
 const invitesRouter = require('./routes/invites');
 const teamsRouter = require('./routes/teams');
 
@@ -68,8 +67,6 @@ app.use('/api/tasks', tasksRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/comments', commentsRouter);
 app.use('/api/notifications', notificationsRouter);
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use('/api/attachments', attachmentsRouter);
 app.use('/api/auth', authRoutes);
 app.use('/api/invites', invitesRouter);
 app.use('/api/teams', teamsRouter);
