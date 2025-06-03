@@ -2,6 +2,7 @@ const User = require('../models/User');
 
 async function syncUser(req, res, next) {
   try {
+    console.log('[DEBUG] syncUser: req.user.sub:', req.user && req.user.sub, 'req.user.email:', req.user && req.user.email);
     const clerkId = req.user.sub;
     let user = await User.findOne({ clerkId });
     if (!user) {
@@ -14,6 +15,7 @@ async function syncUser(req, res, next) {
       });
     }
     req.mongoUser = user;
+    console.log('[DEBUG] syncUser: req.mongoUser._id:', user && user._id, 'email:', user && user.email);
     next();
   } catch (err) {
     return res.status(500).json({ error: 'User sync failed', details: err.message });
