@@ -6,7 +6,9 @@ const ProjectUserRole = require('../models/ProjectUserRole');
 // Get all notifications for the authenticated user
 async function getNotifications(req, res) {
   try {
-    const notifications = await Notification.find({ user: req.mongoUser._id }).sort({ createdAt: -1 });
+    const userId = req.user?.userId || req.mongoUser?._id;
+    if (!userId) return res.status(401).json({ error: 'User not authenticated' });
+    const notifications = await Notification.find({ user: userId }).sort({ createdAt: -1 });
     res.json(notifications);
   } catch (err) {
     res.status(500).json({ error: err.message });
