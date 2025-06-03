@@ -7,23 +7,32 @@ const NotificationSettingsSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  // Arrays of user IDs who want to receive each type of notification
-  statusUpdates: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  tasksAdded: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  messages: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  comments: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }]
+  roles: {
+    admin: {
+      taskUpdates: { type: Boolean, default: true },
+      tasksAdded: { type: Boolean, default: true },
+      comments: { type: Boolean, default: true },
+      messages: { type: Boolean, default: true }
+    },
+    editor: {
+      taskUpdates: { type: Boolean, default: true },
+      tasksAdded: { type: Boolean, default: true },
+      comments: { type: Boolean, default: true },
+      messages: { type: Boolean, default: true }
+    },
+    commenter: {
+      taskUpdates: { type: Boolean, default: false },
+      tasksAdded: { type: Boolean, default: false },
+      comments: { type: Boolean, default: true },
+      messages: { type: Boolean, default: false }
+    },
+    viewer: {
+      taskUpdates: { type: Boolean, default: false },
+      tasksAdded: { type: Boolean, default: false },
+      comments: { type: Boolean, default: false },
+      messages: { type: Boolean, default: false }
+    }
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('NotificationSettings', NotificationSettingsSchema); 
