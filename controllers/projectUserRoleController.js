@@ -56,4 +56,27 @@ async function removeUserRole(req, res) {
   }
 }
 
-module.exports = { setUserRole, getProjectRoles, removeUserRole }; 
+// PATCH /api/projects/:projectId/roles/:userId/notify
+async function setAdminNotify(req, res) {
+  try {
+    const { projectId, userId } = req.params;
+    const { notifyAll } = req.body;
+    // Only allow the admin themselves or another admin to change this
+    const requesterId = req.user.userId || req.mongoUser?._id;
+    const requesterRole = await ProjectUserRole.findOne({ userId: requesterId, projectId });
+    if (!requesterRole || requesterRole.role !== 'admin') {
+      return res.status(403).json({ error: 'Only project admins can update notification preferences.' });
+    }
+    const role = await ProjectUserRole.findOne({ projectId, userId });
+    if (!role || role.role !== 'admin') {
+      return res.status(400).json({ error: 'User is not an admin for this project.' });
+    }
+    role.notifyAll = !!notifyAll;
+    await role.save();
+    res.json({ success: true, notifyAll: role.notifyAll });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+}
+
+module.exports = { setUserRole, getProjectRoles, removeUserRole, setAdminNotify }; 

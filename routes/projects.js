@@ -52,5 +52,7 @@ router.post('/:projectId/addMember', async (req, res) => {
 router.get('/:projectId/roles', auth, projectUserRoleController.getProjectRoles);
 router.post('/:projectId/roles', auth, projectUserRoleController.setUserRole);
 router.delete('/:projectId/roles', auth, projectUserRoleController.removeUserRole);
+// PATCH: Toggle admin notifyAll
+router.patch('/:projectId/roles/:userId/notify', auth, projectUserRoleController.setAdminNotify);
 
 module.exports = router;

@@ -7,7 +7,8 @@ const ProjectUserRoleSchema = new mongoose.Schema({
     type: String, 
     enum: ['admin', 'editor', 'commenter', 'viewer'], 
     default: 'viewer' 
-  }
+  },
+  notifyAll: { type: Boolean, default: true }
 });
 
 module.exports = mongoose.model('ProjectUserRole', ProjectUserRoleSchema); 

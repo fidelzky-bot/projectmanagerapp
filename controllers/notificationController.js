@@ -1,6 +1,7 @@
 const Notification = require('../models/Notification');
 const NotificationSettings = require('../models/NotificationSettings');
 const { io } = require('../server');
+const ProjectUserRole = require('../models/ProjectUserRole');
 
 // Get all notifications for the authenticated user
 async function getNotifications(req, res) {
@@ -61,8 +62,47 @@ async function sendProjectNotifications({ type, message, entityId, entityType, p
   }
 }
 
+// Role-based notification sending
+async function sendRoleBasedNotifications({ type, message, entityId, entityType, projectId, byUser, extra = {} }) {
+  const roles = await ProjectUserRole.find({ projectId });
+  let userIds = [];
+  if (type === 'comments') {
+    userIds = roles.filter(
+      r => r.role === 'commenter' || (r.role === 'admin' && r.notifyAll)
+    ).map(r => r.userId.toString());
+  } else if (type === 'messages') {
+    userIds = roles.filter(
+      r => r.role === 'editor' || r.role === 'commenter' || (r.role === 'admin' && r.notifyAll)
+    ).map(r => r.userId.toString());
+  } else if (
+    type === 'tasksMoved' ||
+    type === 'tasksEdited' ||
+    type === 'tasksAdded'
+  ) {
+    userIds = roles.filter(
+      r => r.role === 'editor' || (r.role === 'admin' && r.notifyAll)
+    ).map(r => r.userId.toString());
+  } else if (type === 'adminOnly') {
+    userIds = roles.filter(r => r.role === 'admin' && r.notifyAll).map(r => r.userId.toString());
+  }
+  // Remove the user who triggered the action (optional)
+  if (byUser) userIds = userIds.filter(id => id !== byUser.toString());
+  for (const userId of userIds) {
+    const notification = await Notification.create({
+      user: userId,
+      type,
+      message,
+      entityId,
+      entityType,
+      ...extra
+    });
+    io.emit('notification:new', notification);
+  }
+}
+
 module.exports = {
   getNotifications,
   markAsRead,
-  sendProjectNotifications
+  sendProjectNotifications,
+  sendRoleBasedNotifications
 };
