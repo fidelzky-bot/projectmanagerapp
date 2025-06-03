@@ -42,8 +42,14 @@ async function updateSettings(req, res) {
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
-    const validMemberIds = Array.isArray(project.team?.members) ? project.team.members.map(m => m._id.toString ? m._id.toString() : String(m._id)) : [];
+    const validMemberIds = Array.isArray(project.team?.members)
+      ? project.team.members.map(m => m._id.toString ? m._id.toString() : String(m._id))
+      : [];
     const allIds = [ ...(statusUpdates || []), ...(messages || []), ...(tasksAdded || []), ...(comments || []) ];
+
+    console.log('validMemberIds:', validMemberIds);
+    console.log('allIds:', allIds);
+
     if (allIds.some(id => !validMemberIds.includes(id.toString()))) {
       return res.status(400).json({ error: 'Invalid user in notification settings.' });
     }
