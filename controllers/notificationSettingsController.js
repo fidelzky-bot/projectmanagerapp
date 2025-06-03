@@ -73,9 +73,9 @@ async function updateSettings(req, res) {
     console.log('Test indexOf:', validMemberIds.indexOf(allIds[0]));
     console.log('Test ===:', validMemberIds[0] === allIds[0]);
     // Use Set for comparison
-    const validSet = new Set(validMemberIds);
-    if (allIds.some(id => !validSet.has(String(id)))) {
-      console.log('Set failed ID:', allIds.find(id => !validSet.has(String(id))));
+    const validSet = new Set(validMemberIds.map(id => String(id).valueOf()));
+    if (allIds.some(id => !validSet.has(String(id).valueOf()))) {
+      console.log('Set (valueOf) failed ID:', allIds.find(id => !validSet.has(String(id).valueOf())));
       return res.status(400).json({ error: 'Invalid user in notification settings.' });
     }
     const update = { statusUpdates, messages, tasksAdded, comments };
