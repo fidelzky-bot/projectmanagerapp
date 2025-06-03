@@ -43,7 +43,7 @@ async function getConversation(req, res) {
     .populate('sender', 'name email')
     .populate('receiver', 'name email');
 
-    console.log('[DEBUG] getConversation:', { currentUserId, userId, count: messages.length, messages });
+    console.log('[DEBUG] getConversation:', { currentUserId, userId, messages });
 
     res.json(messages);
   } catch (err) {
