@@ -33,19 +33,24 @@ async function sendProjectNotifications({ type, message, entityId, entityType, p
   try {
     console.log('sendProjectNotifications called:', { type, projectId, message, entityId, entityType, byUser, extra });
     const settings = await NotificationSettings.findOne({ projectId });
-    console.log('NotificationSettings found:', settings);
-    if (!settings) return;
+    if (!settings || !settings.roles) return;
+    // Find all users and their roles for this project
+    const roles = await ProjectUserRole.find({ projectId });
     let userIds = [];
-    if (type === 'statusUpdates') {
-      userIds = settings.statusUpdates || [];
-    } else if (type === 'tasksAdded') {
-      userIds = settings.tasksAdded || [];
-    } else if (type === 'messages') {
-      userIds = settings.messages || [];
-    } else if (type === 'comments') {
-      userIds = settings.comments || [];
+    for (const roleEntry of roles) {
+      const userRole = roleEntry.role;
+      // Map notification type to schema key
+      let notifKey = null;
+      if (type === 'statusUpdates' || type === 'tasksEdited' || type === 'tasksMoved') notifKey = 'taskUpdates';
+      else if (type === 'tasksAdded') notifKey = 'tasksAdded';
+      else if (type === 'messages') notifKey = 'messages';
+      else if (type === 'comments') notifKey = 'comments';
+      if (notifKey && settings.roles[userRole] && settings.roles[userRole][notifKey]) {
+        userIds.push(roleEntry.userId.toString());
+      }
     }
-    console.log('User IDs to notify:', userIds);
+    // Remove the user who triggered the action (optional)
+    if (byUser) userIds = userIds.filter(id => id !== byUser.toString());
     for (const userId of userIds) {
       const notification = await Notification.create({
         user: userId,
