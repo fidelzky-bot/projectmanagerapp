@@ -47,21 +47,8 @@ async function updateSettings(req, res) {
       : [];
     const allIds = [ ...(statusUpdates || []), ...(messages || []), ...(tasksAdded || []), ...(comments || []) ];
 
-    console.log('validMemberIds:', validMemberIds.map(id => [id, typeof id, Buffer.from(id).toString('hex')]));
-    console.log('allIds:', allIds.map(id => [id, typeof id, Buffer.from(id).toString('hex')]));
-    console.log('Failed ID:', allIds.find(id => !validMemberIds.includes(id.toString())));
-
-    validMemberIds.forEach((id, idx) => {
-      console.log(`Compare [${idx}]:`, id, allIds[0], id === allIds[0]);
-    });
-    console.log('Manual comparison:', validMemberIds[0] === allIds[0]);
-
-    console.log('validMemberIds[0] length:', validMemberIds[0].length, 'charCodes:', validMemberIds[0].split('').map(c => c.charCodeAt(0)));
-    console.log('allIds[0] length:', allIds[0].length, 'charCodes:', allIds[0].split('').map(c => c.charCodeAt(0)));
-
-    // Use manual filter for validation
-    if (allIds.some(id => !validMemberIds.filter(validId => validId === id.toString()).length)) {
-      console.log('Manual failed ID:', allIds.find(id => !validMemberIds.filter(validId => validId === id.toString()).length));
+    // Fix: force both sides to primitive strings for comparison
+    if (allIds.some(id => !validMemberIds.map(String).includes(String(id)))) {
       return res.status(400).json({ error: 'Invalid user in notification settings.' });
     }
     const update = { statusUpdates, messages, tasksAdded, comments };
