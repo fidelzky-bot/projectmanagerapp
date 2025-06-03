@@ -3,16 +3,25 @@ const User = require('../models/User');
 async function syncUser(req, res, next) {
   try {
     console.log('[DEBUG] syncUser: req.user.sub:', req.user && req.user.sub, 'req.user.email:', req.user && req.user.email);
-    const clerkId = req.user.sub;
-    let user = await User.findOne({ clerkId });
-    if (!user) {
-      // Create user from Clerk JWT
-      user = await User.create({
-        clerkId,
-        email: req.user.email,
-        name: req.user.name,
-        avatar: req.user.picture
-      });
+    let user;
+    if (req.user && req.user.sub) {
+      user = await User.findOne({ clerkId: req.user.sub });
+      if (!user) {
+        user = await User.create({
+          clerkId: req.user.sub,
+          email: req.user.email,
+          name: req.user.name,
+          avatar: req.user.picture
+        });
+      }
+    } else if (req.user && req.user.email) {
+      user = await User.findOne({ email: req.user.email });
+      if (!user) {
+        user = await User.create({
+          email: req.user.email,
+          name: req.user.name
+        });
+      }
     }
     req.mongoUser = user;
     console.log('[DEBUG] syncUser: req.mongoUser._id:', user && user._id, 'email:', user && user.email);
