@@ -7,6 +7,8 @@ async function sendMessage(req, res) {
     const { receiverId, content } = req.body;
     const senderId = req.mongoUser._id;
 
+    console.log('[DEBUG] sendMessage:', { senderId, receiverId, content });
+
     const message = new Message({
       sender: senderId,
       receiver: receiverId,
