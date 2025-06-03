@@ -55,4 +55,9 @@ router.delete('/:projectId/roles', auth, projectUserRoleController.removeUserRol
 // PATCH: Toggle admin notifyAll
 router.patch('/:projectId/roles/:userId/notify', auth, projectUserRoleController.setAdminNotify);
 
+// Temporary test route to verify deployment and router
+router.get('/test-notify-route', (req, res) => {
+  res.json({ message: 'Notify route is present!' });
+});
+
 module.exports = router;
