@@ -56,6 +56,9 @@ async function updateSettings(req, res) {
     });
     console.log('Manual comparison:', validMemberIds[0] === allIds[0]);
 
+    console.log('validMemberIds[0] length:', validMemberIds[0].length, 'charCodes:', validMemberIds[0].split('').map(c => c.charCodeAt(0)));
+    console.log('allIds[0] length:', allIds[0].length, 'charCodes:', allIds[0].split('').map(c => c.charCodeAt(0)));
+
     // Use manual filter for validation
     if (allIds.some(id => !validMemberIds.filter(validId => validId === id.toString()).length)) {
       console.log('Manual failed ID:', allIds.find(id => !validMemberIds.filter(validId => validId === id.toString()).length));
