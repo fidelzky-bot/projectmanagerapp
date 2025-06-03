@@ -19,6 +19,9 @@ async function getSettings(req, res) {
     console.log('Project ID:', projectId);
     console.log('Team ID:', project.team?._id);
     console.log('Populated team members:', project.team?.members?.map(m => m._id));
+    console.log('project:', project);
+    console.log('team.members:', project.team?.members);
+    console.log('team.members[0]:', project.team?.members?.[0]);
     res.json({
       ...settings.toObject(),
       teamMembers: teamArray.map(m => ({ _id: m._id, name: m.name }))
@@ -47,6 +50,8 @@ async function updateSettings(req, res) {
     // Validate that all user IDs are in the team
     const project = await Project.findById(projectId).populate({ path: 'team', populate: { path: 'members' } });
     console.log('project:', project);
+    console.log('team.members:', project.team?.members);
+    console.log('team.members[0]:', project.team?.members?.[0]);
     if (!project) {
       console.log('Project not found');
       return res.status(404).json({ error: 'Project not found' });
