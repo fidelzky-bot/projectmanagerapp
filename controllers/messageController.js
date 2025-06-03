@@ -39,8 +39,10 @@ async function getConversation(req, res) {
       ]
     })
     .sort({ createdAt: 1 })
-    .populate('sender', 'name')
-    .populate('receiver', 'name');
+    .populate('sender', 'name email')
+    .populate('receiver', 'name email');
+
+    console.log('[DEBUG] getConversation:', { currentUserId, userId, count: messages.length, messages });
 
     res.json(messages);
   } catch (err) {
