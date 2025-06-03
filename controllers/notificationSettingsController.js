@@ -68,8 +68,14 @@ async function updateSettings(req, res) {
     validMemberIds.forEach((id, idx) => {
       console.log(`validMemberIds[${idx}]:`, id, typeof id);
     });
-    if (allIds.some(id => !validMemberIds.map(String).includes(String(id)))) {
-      console.log('Invalid user in notification settings:', allIds.find(id => !validMemberIds.map(String).includes(String(id))));
+    // Minimal comparison tests
+    console.log('Test includes:', validMemberIds.includes(allIds[0]));
+    console.log('Test indexOf:', validMemberIds.indexOf(allIds[0]));
+    console.log('Test ===:', validMemberIds[0] === allIds[0]);
+    // Use Set for comparison
+    const validSet = new Set(validMemberIds);
+    if (allIds.some(id => !validSet.has(String(id)))) {
+      console.log('Set failed ID:', allIds.find(id => !validSet.has(String(id))));
       return res.status(400).json({ error: 'Invalid user in notification settings.' });
     }
     const update = { statusUpdates, messages, tasksAdded, comments };
