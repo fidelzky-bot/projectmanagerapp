@@ -51,7 +51,14 @@ async function updateSettings(req, res) {
     console.log('allIds:', allIds.map(id => [id, typeof id, Buffer.from(id).toString('hex')]));
     console.log('Failed ID:', allIds.find(id => !validMemberIds.includes(id.toString())));
 
-    if (allIds.some(id => !validMemberIds.includes(id.toString()))) {
+    validMemberIds.forEach((id, idx) => {
+      console.log(`Compare [${idx}]:`, id, allIds[0], id === allIds[0]);
+    });
+    console.log('Manual comparison:', validMemberIds[0] === allIds[0]);
+
+    // Use manual filter for validation
+    if (allIds.some(id => !validMemberIds.filter(validId => validId === id.toString()).length)) {
+      console.log('Manual failed ID:', allIds.find(id => !validMemberIds.filter(validId => validId === id.toString()).length));
       return res.status(400).json({ error: 'Invalid user in notification settings.' });
     }
     const update = { statusUpdates, messages, tasksAdded, comments };
