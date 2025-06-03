@@ -16,6 +16,9 @@ async function getSettings(req, res) {
       settings = new NotificationSettings({ projectId });
       await settings.save();
     }
+    console.log('Project ID:', projectId);
+    console.log('Team ID:', project.team?._id);
+    console.log('Populated team members:', project.team?.members?.map(m => m._id));
     res.json({
       ...settings.toObject(),
       teamMembers: teamArray.map(m => ({ _id: m._id, name: m.name }))
@@ -57,6 +60,10 @@ async function updateSettings(req, res) {
       update,
       { upsert: true, new: true }
     );
+    console.log('Project ID:', projectId);
+    console.log('Team ID:', project.team?._id);
+    console.log('Requesting user ID:', userId);
+    console.log('Populated team members:', project.team?.members?.map(m => m._id));
     res.json(settings);
   } catch (err) {
     res.status(400).json({ error: err.message });
