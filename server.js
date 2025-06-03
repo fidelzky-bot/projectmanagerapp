@@ -88,6 +88,8 @@ app.use((req, res) => {
   res.status(404).send('Not Found');
 });
 
+app.use('/uploads/avatars', express.static(path.join(__dirname, 'uploads/avatars')));
+
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

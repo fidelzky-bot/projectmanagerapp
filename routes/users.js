@@ -5,6 +5,8 @@ const syncUser = require('../middleware/syncUser');
 const userController = require('../controllers/userController');
 const User = require('../models/User');
 const Project = require('../models/Project');
+const multer = require('multer');
+const path = require('path');
 
 // Get current authenticated user (from MongoDB)
 router.get('/me', auth, async (req, res) => {
@@ -24,13 +26,36 @@ router.get('/me', auth, async (req, res) => {
 
 // Update current user profile
 router.put('/me', auth, async (req, res) => {
-  const { name, contact } = req.body;
+  const { name, contact, avatar, jobTitle, bio, birthday, status } = req.body;
+  const update = { name, contact, jobTitle, bio, birthday };
+  if (avatar !== undefined) update.avatar = avatar;
+  if (status !== undefined) update.status = status;
   const user = await User.findByIdAndUpdate(
     req.user.userId,
-    { name, contact },
+    update,
     { new: true }
   ).select('-password');
   res.json(user);
+});
+
+// Avatar upload endpoint (expects multipart/form-data)
+const upload = multer({
+  dest: path.join(__dirname, '../uploads/avatars'),
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith('image/')) {
+      return cb(new Error('Only image files are allowed!'));
+    }
+    cb(null, true);
+  }
+});
+
+router.post('/me/avatar', auth, upload.single('avatar'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  // Save the file path (relative to /uploads/avatars)
+  const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+  await User.findByIdAndUpdate(req.user.userId, { avatar: avatarUrl });
+  res.json({ avatar: avatarUrl });
 });
 
 // Get all users (for assignee dropdown)
