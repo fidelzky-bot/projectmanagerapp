@@ -47,11 +47,11 @@ async function updateSettings(req, res) {
       : [];
     const allIds = [ ...(statusUpdates || []), ...(messages || []), ...(tasksAdded || []), ...(comments || []) ];
 
-    console.log('validMemberIds:', validMemberIds);
-    console.log('allIds:', allIds);
+    console.log('validMemberIds:', validMemberIds.map(id => [id, typeof id, Buffer.from(id).toString('hex')]));
+    console.log('allIds:', allIds.map(id => [id, typeof id, Buffer.from(id).toString('hex')]));
+    console.log('Failed ID:', allIds.find(id => !validMemberIds.includes(id.toString())));
 
     if (allIds.some(id => !validMemberIds.includes(id.toString()))) {
-      console.log('Failed ID:', allIds.find(id => !validMemberIds.includes(id.toString())));
       return res.status(400).json({ error: 'Invalid user in notification settings.' });
     }
     const update = { statusUpdates, messages, tasksAdded, comments };
