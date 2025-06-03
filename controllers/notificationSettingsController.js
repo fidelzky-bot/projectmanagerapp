@@ -30,6 +30,7 @@ async function getSettings(req, res) {
 
 // Update notification settings for a project (admin only)
 async function updateSettings(req, res) {
+  console.log('updateSettings endpoint hit');
   try {
     const { projectId } = req.params;
     const userId = req.user.userId;
