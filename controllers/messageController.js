@@ -17,8 +17,9 @@ async function sendMessage(req, res) {
     await message.populate('sender', 'name');
     await message.populate('receiver', 'name');
 
-    // Emit the message to the receiver in real-time
+    // Emit the message to the receiver and sender in real-time
     io.emit(`message:${receiverId}`, message);
+    io.emit(`message:${senderId}`, message);
     
     res.status(201).json(message);
   } catch (err) {
