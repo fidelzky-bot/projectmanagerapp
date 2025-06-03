@@ -51,6 +51,7 @@ async function updateSettings(req, res) {
     console.log('allIds:', allIds);
 
     if (allIds.some(id => !validMemberIds.includes(id.toString()))) {
+      console.log('Failed ID:', allIds.find(id => !validMemberIds.includes(id.toString())));
       return res.status(400).json({ error: 'Invalid user in notification settings.' });
     }
     const update = { statusUpdates, messages, tasksAdded, comments };
