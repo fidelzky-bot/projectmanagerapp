@@ -80,9 +80,50 @@ async function getUnreadCount(req, res) {
   }
 }
 
+// Get recent conversations (last month)
+async function getRecentConversations(req, res) {
+  try {
+    const currentUserId = req.mongoUser._id;
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+
+    // Find all messages involving the current user in the last month
+    const messages = await Message.find({
+      $and: [
+        { createdAt: { $gte: oneMonthAgo } },
+        { $or: [
+          { sender: currentUserId },
+          { receiver: currentUserId }
+        ]}
+      ]
+    })
+    .sort({ createdAt: -1 })
+    .populate('sender', 'name email')
+    .populate('receiver', 'name email');
+
+    // Map to unique conversation partners
+    const conversations = {};
+    messages.forEach(msg => {
+      // The other user in the conversation
+      const otherUser = String(msg.sender._id) === String(currentUserId) ? msg.receiver : msg.sender;
+      if (!conversations[otherUser._id]) {
+        conversations[otherUser._id] = {
+          user: otherUser,
+          lastMessage: msg
+        };
+      }
+    });
+
+    res.json(Object.values(conversations));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
 module.exports = {
   sendMessage,
   getConversation,
   markAsRead,
-  getUnreadCount
+  getUnreadCount,
+  getRecentConversations
 }; 

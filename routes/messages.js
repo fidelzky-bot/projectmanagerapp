@@ -16,4 +16,7 @@ router.post('/read/:senderId', clerkAuth, syncUser, messageController.markAsRead
 // Get unread message count
 router.get('/unread', clerkAuth, syncUser, messageController.getUnreadCount);
 
+// Get recent conversations (last month)
+router.get('/conversations/recent', clerkAuth, syncUser, messageController.getRecentConversations);
+
 module.exports = router; 
