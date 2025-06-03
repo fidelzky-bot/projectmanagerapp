@@ -39,10 +39,9 @@ router.get('/me', auth, async (req, res) => {
 
 // Update current user profile
 router.put('/me', auth, async (req, res) => {
-  const { name, contact, avatar, jobTitle, bio, birthday, status } = req.body;
+  const { name, contact, avatar, jobTitle, bio, birthday } = req.body;
   const update = { name, contact, jobTitle, bio, birthday };
   if (avatar !== undefined) update.avatar = avatar;
-  if (status !== undefined) update.status = status;
   const user = await User.findByIdAndUpdate(
     req.user.userId,
     update,

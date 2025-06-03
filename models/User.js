@@ -11,12 +11,7 @@ const UserSchema = new mongoose.Schema({
   avatar: String,
   jobTitle: String,
   bio: String,
-  birthday: Date,
-  status: {
-    text: String,
-    emoji: String,
-    expiresAt: Date
-  }
+  birthday: Date
 });
 
 module.exports = mongoose.model('User', UserSchema);
