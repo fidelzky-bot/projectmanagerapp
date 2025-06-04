@@ -31,14 +31,18 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
-// Get current user's team
+// Get the current user's team
 router.get('/me', auth, async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).populate('team');
+    const user = await User.findById(req.user.userId);
     if (!user || !user.team) {
-      return res.status(404).json({ error: 'No team found' });
+      return res.status(404).json({ error: 'User is not part of a team.' });
     }
-    res.json(user.team);
+    const team = await Team.findById(user.team);
+    if (!team) {
+      return res.status(404).json({ error: 'Team not found.' });
+    }
+    res.json(team);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
