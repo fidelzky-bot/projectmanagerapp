@@ -3,7 +3,7 @@ const { io } = require('../server');
 const User = require('../models/User');
 const ProjectUserRole = require('../models/ProjectUserRole');
 const Notification = require('../models/Notification');
-const { sendRoleBasedNotifications } = require('./notificationController');
+const { sendRoleBasedNotifications, sendProjectNotifications } = require('./notificationController');
 
 // Helper to get user role for a project
 async function getUserRole(userId, projectId) {
@@ -42,21 +42,16 @@ async function createTask(req, res) {
     
     // Create notification for assigned user if any
     if (assignedUser) {
-      await sendRoleBasedNotifications({
-        type: 'tasksAdded',
-        message: `You have been assigned to task: ${title}`,
+      await sendProjectNotifications({
+        type: 'task_assigned',
+        message: `${creator ? creator.name : 'Someone'} assigned you to ${task.title}`,
         entityId: task._id,
         entityType: 'Task',
         projectId: project,
         byUser: req.user.userId,
         extra: {
-          action: 'assigned',
-          taskId: task._id,
-          title: task.title,
-          by: req.user.userId,
-          byName: creator ? creator.name : 'User',
-          time: new Date(),
-          project: task.project._id || task.project
+          assignedTo: assignedUser,
+          taskTitle: task.title
         }
       });
     }

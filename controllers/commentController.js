@@ -68,17 +68,19 @@ async function createComment(req, res) {
     });
     // Notify mentioned users (in-app notification)
     for (const user of mentionedUsers) {
-      await sendProjectNotifications({
+      const notif = await Notification.create({
+        user: user._id,
         type: 'task_mentioned',
         message: `${comment.author?.name || 'Someone'} mentioned you in ${taskDoc.title}`,
         entityId: taskDoc._id,
         entityType: 'Task',
-        projectId: taskDoc.project,
-        byUser: author,
-        extra: {
-          mentionedUser: user._id,
-          taskTitle: taskDoc.title
-        }
+        projectName: taskDoc.project.name || '',
+        taskTitle: taskDoc.title,
+        sender: author
+      });
+      io.emit('notification:new', {
+        ...notif.toObject(),
+        sender: { _id: author, name: comment.author?.name || 'Someone' }
       });
     }
     io.emit('comment:new', comment);
