@@ -73,7 +73,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/invites', invitesRouter);
 app.use('/api/teams', teamsRouter);
 app.use('/api/messages', messagesRouter);
-app.use('/api/files', filesRouter);
 
 // Health check route
 app.get('/', (req, res) => {
