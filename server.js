@@ -8,6 +8,9 @@ const http = require('http');
 const path = require('path');
 const { Server } = require('socket.io');
 const authRoutes = require('./routes/auth');
+const Message = require('./models/Message');
+const User = require('./models/User');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const server = http.createServer(app);
@@ -37,6 +40,36 @@ const io = new Server(server, {
 
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
+
+  // Listen for newMessage events from clients
+  socket.on('newMessage', async (data) => {
+    try {
+      // Expect data: { receiverId, content, token }
+      const { receiverId, content, token } = data;
+      if (!token) return;
+      // Verify JWT and get senderId
+      let senderId;
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        senderId = decoded.userId || decoded._id || decoded.id;
+      } catch (err) {
+        console.error('Invalid token in socket newMessage:', err);
+        return;
+      }
+      if (!senderId || !receiverId || !content) return;
+      // Save the message to the database
+      const message = new Message({ sender: senderId, receiver: receiverId, content });
+      await message.save();
+      await message.populate('sender', 'name email avatar');
+      await message.populate('receiver', 'name email avatar');
+      // Emit the message to both sender and receiver
+      io.emit(`message:${receiverId}`, message);
+      io.emit(`message:${senderId}`, message);
+    } catch (err) {
+      console.error('Socket newMessage error:', err);
+    }
+  });
+
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
   });
