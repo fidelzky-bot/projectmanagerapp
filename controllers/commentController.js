@@ -12,6 +12,7 @@ async function getUserRole(userId, projectId) {
 
 // Create a new comment
 async function createComment(req, res) {
+  console.log('createComment called, body:', req.body);
   try {
     const { text, task } = req.body;
     if (!task) return res.status(400).json({ error: 'Task is required' });
