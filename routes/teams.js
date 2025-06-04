@@ -49,7 +49,7 @@ router.get('/:teamId/members', auth, async (req, res) => {
   try {
     console.log('Fetching team members for teamId:', req.params.teamId);
     const team = await Team.findById(req.params.teamId)
-      .populate('members', 'name email role');
+      .populate('members', 'name email avatar bio occupation birthday hobby jobTitle contact lastActive');
     if (!team) {
       console.log('Team not found for teamId:', req.params.teamId);
       return res.status(404).json({ error: 'Team not found' });
