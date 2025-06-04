@@ -56,11 +56,32 @@ router.post('/:taskId/comments', auth, async (req, res) => {
   try {
     const { text } = req.body;
     if (!text) return res.status(400).json({ error: 'Comment text is required' });
+    // --- Mention extraction and debug logs ---
+    const mentionRegex = /@([a-zA-Z0-9_]+)/g;
+    let match;
+    const mentionedUsernames = [];
+    while ((match = mentionRegex.exec(text)) !== null) {
+      mentionedUsernames.push(match[1]);
+    }
+    const allUsers = await User.find({});
+    console.log('All users in DB:', allUsers.map(u => u.name));
+    console.log('Mentioned usernames:', mentionedUsernames);
+    const mentionedUsers = mentionedUsernames.length
+      ? await User.find({
+          $or: mentionedUsernames.map(username => ({
+            name: { $regex: `^${username}$`, $options: 'i' }
+          }))
+        })
+      : [];
+    console.log('Mentioned users found:', mentionedUsers.map(u => u.name));
+    const mentions = mentionedUsers.map(u => u._id);
+    // --- End mention extraction ---
     const comment = await Comment.create({
       text,
       task: req.params.taskId,
-      author: req.user.userId, // or whatever field you use for user
-      createdAt: new Date()
+      author: req.user.userId,
+      createdAt: new Date(),
+      mentions
     });
     // Notify users for comments
     const user = await User.findById(req.user.userId);
@@ -82,6 +103,21 @@ router.post('/:taskId/comments', auth, async (req, res) => {
         project: task && (task.project._id || task.project)
       }
     });
+    // Mention notifications
+    const Notification = require('../models/Notification');
+    for (const mentionedUser of mentionedUsers) {
+      await Notification.create({
+        user: mentionedUser._id,
+        type: 'mention',
+        message: `${user?.name || 'Someone'} mentioned you in ${task ? task.title : ''}`,
+        entityId: task ? task._id : null,
+        entityType: 'Task',
+        byName: user?.name || 'User',
+        action: 'mentioned',
+        title: task ? task.title : '',
+        time: new Date()
+      });
+    }
     res.status(201).json(comment);
   } catch (err) {
     res.status(500).json({ error: 'Failed to add comment' });
