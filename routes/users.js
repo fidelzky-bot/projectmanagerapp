@@ -61,7 +61,8 @@ router.post('/me/avatar', auth, upload.single('avatar'), async (req, res) => {
 // Get all users (for assignee dropdown)
 router.get('/', async (req, res) => {
   try {
-    const users = await User.find({}, 'name email');
+    // Return all relevant profile fields
+    const users = await User.find({}, 'name email avatar bio occupation birthday hobby jobTitle contact lastActive');
     res.json(users);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch users' });
@@ -71,7 +72,8 @@ router.get('/', async (req, res) => {
 // Get users for a specific project
 router.get('/byProject/:projectId', async (req, res) => {
   try {
-    const project = await Project.findById(req.params.projectId).populate('members', 'name email lastActive');
+    // Populate all relevant profile fields
+    const project = await Project.findById(req.params.projectId).populate('members', 'name email avatar bio occupation birthday hobby jobTitle contact lastActive');
     if (!project) return res.status(404).json({ error: 'Project not found' });
     res.json(project.members);
   } catch (err) {
