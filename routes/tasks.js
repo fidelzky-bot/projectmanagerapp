@@ -7,6 +7,26 @@ const Comment = require('../models/Comment');
 const { io } = require('../server');
 const User = require('../models/User');
 const { sendProjectNotifications } = require('../controllers/notificationController');
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
+// Cloudinary config
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'task_attachments',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'csv', 'zip', 'rar'],
+    resource_type: 'auto',
+  },
+});
+const upload = multer({ storage, limits: { fileSize: 20 * 1024 * 1024 } }); // 20MB
 
 // Create a task (protected)
 router.post('/', (req, res, next) => {
@@ -75,6 +95,42 @@ router.get('/:taskId/comments', auth, async (req, res) => {
     res.json(comments);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch comments' });
+  }
+});
+
+// Upload attachment to a task
+router.post('/:id/attachments', auth, upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file || !req.file.path) return res.status(400).json({ error: 'No file uploaded' });
+    const task = await Task.findById(req.params.id);
+    if (!task) return res.status(404).json({ error: 'Task not found' });
+    const attachment = {
+      filename: req.file.originalname,
+      url: req.file.path,
+      uploader: req.user.userId,
+      uploadedAt: new Date()
+    };
+    task.attachments.push(attachment);
+    await task.save();
+    res.status(201).json(attachment);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to upload attachment' });
+  }
+});
+
+// Delete attachment from a task
+router.delete('/:id/attachments/:attachmentId', auth, async (req, res) => {
+  try {
+    const task = await Task.findById(req.params.id);
+    if (!task) return res.status(404).json({ error: 'Task not found' });
+    const attachment = task.attachments.id(req.params.attachmentId);
+    if (!attachment) return res.status(404).json({ error: 'Attachment not found' });
+    // Optionally: delete from Cloudinary using public_id (parse from url)
+    attachment.remove();
+    await task.save();
+    res.json({ message: 'Attachment deleted' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete attachment' });
   }
 });
 

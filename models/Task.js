@@ -8,7 +8,15 @@ const TaskSchema = new mongoose.Schema({
   status: { type: String, default: 'To Do' },
   priority: { type: String, default: 'Low' },
   assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  dueDate: Date
+  dueDate: Date,
+  attachments: [
+    {
+      filename: String,
+      url: String,
+      uploader: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      uploadedAt: { type: Date, default: Date.now }
+    }
+  ]
 });
 
 module.exports = mongoose.model('Task', TaskSchema);

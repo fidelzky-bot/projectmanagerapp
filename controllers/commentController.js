@@ -22,7 +22,20 @@ async function createComment(req, res) {
       return res.status(403).json({ error: 'You do not have permission to comment.' });
     }
     const author = req.mongoUser?._id || req.user.userId;
-    const comment = new Comment({ text, author, task });
+    // Parse mentions from text (e.g., @username)
+    const mentionRegex = /@([a-zA-Z0-9_]+)/g;
+    let match;
+    const mentionedUsernames = [];
+    while ((match = mentionRegex.exec(text)) !== null) {
+      mentionedUsernames.push(match[1]);
+    }
+    // Find mentioned users in DB
+    const User = require('../models/User');
+    const mentionedUsers = mentionedUsernames.length
+      ? await User.find({ name: { $in: mentionedUsernames } })
+      : [];
+    const mentions = mentionedUsers.map(u => u._id);
+    const comment = new Comment({ text, author, task, mentions });
     await comment.save();
     await comment.populate('author');
     // Notify commenters and admins (if opted in)
@@ -43,6 +56,14 @@ async function createComment(req, res) {
         project: taskDoc.project
       }
     });
+    // Notify mentioned users (optional, in-app notification)
+    // You can implement your own notification logic here
+    // Example: send notification to each mentioned user
+    /*
+    for (const user of mentionedUsers) {
+      // sendNotification(user._id, ...)
+    }
+    */
     io.emit('comment:new', comment);
     res.status(201).json(comment);
   } catch (err) {
