@@ -29,10 +29,12 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB
 
-// Get current user profile (should be above /:id)
-router.get('/me', async (req, res) => {
+// Get current authenticated user (from MongoDB)
+router.get('/me', auth, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
+    // Update lastActive
+    await User.findByIdAndUpdate(req.user.userId, { lastActive: new Date() });
+    const user = await User.findById(req.user.userId).select('-password');
     if (!user) return res.status(404).json({ error: 'User not found' });
     res.json(user);
   } catch (err) {
