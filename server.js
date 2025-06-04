@@ -54,6 +54,7 @@ const notificationsRouter = require('./routes/notifications');
 const invitesRouter = require('./routes/invites');
 const teamsRouter = require('./routes/teams');
 const messagesRouter = require('./routes/messages');
+const filesRouter = require('./routes/files');
 
 console.log('Server file loaded and running latest code!');
 
@@ -72,6 +73,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/invites', invitesRouter);
 app.use('/api/teams', teamsRouter);
 app.use('/api/messages', messagesRouter);
+app.use('/api/files', filesRouter);
 
 // Health check route
 app.get('/', (req, res) => {
