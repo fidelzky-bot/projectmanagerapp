@@ -30,10 +30,14 @@ async function createComment(req, res) {
     while ((match = mentionRegex.exec(text)) !== null) {
       mentionedUsernames.push(match[1]);
     }
-    // Find mentioned users in DB
+    // Find mentioned users in DB (case-insensitive)
     const User = require('../models/User');
     const mentionedUsers = mentionedUsernames.length
-      ? await User.find({ name: { $in: mentionedUsernames } })
+      ? await User.find({
+          $or: mentionedUsernames.map(username => ({
+            name: { $regex: `^${username}$`, $options: 'i' }
+          }))
+        })
       : [];
     const mentions = mentionedUsers.map(u => u._id);
     const comment = new Comment({ text, author, task, mentions });
