@@ -63,11 +63,11 @@ router.post('/:taskId/comments', auth, async (req, res) => {
         project: task && (task.project._id || task.project)
       }
     });
-    // Mention notifications
+    // Mention notifications (real-time to mentioned users only)
     const Notification = require('../models/Notification');
     if (Array.isArray(mentions)) {
       for (const mentionedUserId of mentions) {
-        await Notification.create({
+        const notif = await Notification.create({
           user: mentionedUserId,
           type: 'task_mentioned',
           message: `${user?.name || 'Someone'} mentioned you in Task ${task ? task.title : ''}`,
@@ -75,6 +75,10 @@ router.post('/:taskId/comments', auth, async (req, res) => {
           entityType: 'Task',
           taskTitle: task ? task.title : '',
           sender: req.user.userId
+        });
+        io.to(mentionedUserId.toString()).emit('notification:new', {
+          ...notif.toObject(),
+          sender: { _id: req.user.userId, name: user ? user.name : 'Someone' }
         });
       }
     }

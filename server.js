@@ -41,6 +41,14 @@ const io = new Server(server, {
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
 
+  // Listen for user to join their own room for notifications
+  socket.on('join', (userId) => {
+    if (userId) {
+      socket.join(userId.toString());
+      console.log('User joined room:', userId);
+    }
+  });
+
   // Listen for newMessage events from clients
   socket.on('newMessage', async (data) => {
     try {
