@@ -30,6 +30,7 @@ async function createComment(req, res) {
     while ((match = mentionRegex.exec(text)) !== null) {
       mentionedUsernames.push(match[1]);
     }
+    console.log('Mentioned usernames:', mentionedUsernames);
     // Find mentioned users in DB (case-insensitive)
     const User = require('../models/User');
     const mentionedUsers = mentionedUsernames.length
@@ -39,6 +40,7 @@ async function createComment(req, res) {
           }))
         })
       : [];
+    console.log('Mentioned users found:', mentionedUsers.map(u => u.name));
     const mentions = mentionedUsers.map(u => u._id);
     const comment = new Comment({ text, author, task, mentions });
     await comment.save();
