@@ -54,7 +54,6 @@ const notificationsRouter = require('./routes/notifications');
 const invitesRouter = require('./routes/invites');
 const teamsRouter = require('./routes/teams');
 const messagesRouter = require('./routes/messages');
-const filesRouter = require('./routes/files');
 
 console.log('Server file loaded and running latest code!');
 
