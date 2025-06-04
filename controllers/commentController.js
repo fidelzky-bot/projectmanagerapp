@@ -1,7 +1,7 @@
 const Comment = require('../models/Comment');
 const { io } = require('../server');
 const ProjectUserRole = require('../models/ProjectUserRole');
-const { sendRoleBasedNotifications } = require('./notificationController');
+const { sendRoleBasedNotifications, sendProjectNotifications } = require('./notificationController');
 const Notification = require('../models/Notification');
 
 // Helper to get user role for a project
@@ -68,16 +68,17 @@ async function createComment(req, res) {
     });
     // Notify mentioned users (in-app notification)
     for (const user of mentionedUsers) {
-      await Notification.create({
-        user: user._id,
-        type: 'mention',
+      await sendProjectNotifications({
+        type: 'task_mentioned',
         message: `${comment.author?.name || 'Someone'} mentioned you in ${taskDoc.title}`,
         entityId: taskDoc._id,
         entityType: 'Task',
-        byName: comment.author?.name || 'User',
-        action: 'mentioned',
-        title: taskDoc.title,
-        time: new Date()
+        projectId: taskDoc.project,
+        byUser: author,
+        extra: {
+          mentionedUser: user._id,
+          taskTitle: taskDoc.title
+        }
       });
     }
     io.emit('comment:new', comment);
