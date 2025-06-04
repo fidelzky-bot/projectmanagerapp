@@ -29,12 +29,15 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB
 
-// Get current authenticated user (from MongoDB)
-router.get('/me', auth, async (req, res) => {
-  // Update lastActive
-  await User.findByIdAndUpdate(req.user.userId, { lastActive: new Date() });
-  const user = await User.findById(req.user.userId).select('-password');
-  res.json(user);
+// Get current user profile (should be above /:id)
+router.get('/me', async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch user' });
+  }
 });
 
 // Update current user profile
@@ -78,6 +81,17 @@ router.get('/byProject/:projectId', async (req, res) => {
     res.json(project.members);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch team members' });
+  }
+});
+
+// Get a user by ID (all profile fields)
+router.get('/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('-password');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch user' });
   }
 });
 
