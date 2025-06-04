@@ -33,6 +33,23 @@ async function markAsRead(req, res) {
   }
 }
 
+// Mark all notifications as read
+async function markAllAsRead(req, res) {
+  try {
+    const userId = req.user?.userId || req.mongoUser?._id;
+    if (!userId) return res.status(401).json({ error: 'User not authenticated' });
+    
+    await Notification.updateMany(
+      { user: userId, read: false },
+      { read: true }
+    );
+    
+    res.json({ message: 'All notifications marked as read' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
 // Utility: Send notifications to all users in the relevant notification settings array
 async function sendProjectNotifications({ type, message, entityId, entityType, projectId, byUser, extra = {} }) {
   try {
@@ -50,20 +67,60 @@ async function sendProjectNotifications({ type, message, entityId, entityType, p
     // Find all users and their roles for this project
     const roles = await ProjectUserRole.find({ projectId });
     let userIds = [];
-    for (const roleEntry of roles) {
-      const userRole = roleEntry.role;
-      // Map notification type to schema key
-      let notifKey = null;
-      if (type === 'statusUpdates' || type === 'tasksEdited' || type === 'tasksMoved') notifKey = 'taskUpdates';
-      else if (type === 'tasksAdded') notifKey = 'tasksAdded';
-      else if (type === 'messages') notifKey = 'messages';
-      else if (type === 'comments') notifKey = 'comments';
-      if (notifKey && settings.roles[userRole] && settings.roles[userRole][notifKey]) {
-        userIds.push(roleEntry.userId.toString());
-      }
+
+    // Handle specific notification types
+    switch (type) {
+      case 'task_assigned':
+        // Only notify the assigned user
+        if (extra.assignedTo) {
+          userIds = [extra.assignedTo.toString()];
+        }
+        break;
+      case 'task_updated':
+        // Notify project members based on settings
+        for (const roleEntry of roles) {
+          const userRole = roleEntry.role;
+          if (settings.roles[userRole]?.taskUpdates) {
+            userIds.push(roleEntry.userId.toString());
+          }
+        }
+        break;
+      case 'task_commented':
+        // Notify project members based on settings
+        for (const roleEntry of roles) {
+          const userRole = roleEntry.role;
+          if (settings.roles[userRole]?.comments) {
+            userIds.push(roleEntry.userId.toString());
+          }
+        }
+        break;
+      case 'task_mentioned':
+        // Only notify the mentioned user
+        if (extra.mentionedUser) {
+          userIds = [extra.mentionedUser.toString()];
+        }
+        break;
+      default:
+        // For other types, use the existing role-based logic
+        for (const roleEntry of roles) {
+          const userRole = roleEntry.role;
+          let notifKey = null;
+          if (type === 'statusUpdates' || type === 'tasksEdited' || type === 'tasksMoved') notifKey = 'taskUpdates';
+          else if (type === 'tasksAdded') notifKey = 'tasksAdded';
+          else if (type === 'messages') notifKey = 'messages';
+          else if (type === 'comments') notifKey = 'comments';
+          if (notifKey && settings.roles[userRole] && settings.roles[userRole][notifKey]) {
+            userIds.push(roleEntry.userId.toString());
+          }
+        }
     }
-    // Remove the user who triggered the action (optional)
+
+    // Remove the user who triggered the action
     if (byUser) userIds = userIds.filter(id => id !== byUser.toString());
+    
+    // Remove duplicates
+    userIds = [...new Set(userIds)];
+
     for (const userId of userIds) {
       const notification = await Notification.create({
         user: userId,
@@ -140,6 +197,7 @@ async function sendRoleBasedNotifications({ type, message, entityId, entityType,
 module.exports = {
   getNotifications,
   markAsRead,
+  markAllAsRead,
   sendProjectNotifications,
   sendRoleBasedNotifications
 };
