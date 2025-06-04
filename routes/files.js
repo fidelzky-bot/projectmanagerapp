@@ -65,8 +65,20 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
     await file.populate('uploader', 'name email');
     res.status(201).json(file);
   } catch (err) {
-    // Improved error logging
-    console.error('File upload error:', JSON.stringify(err, null, 2));
+    // Enhanced error logging
+    console.error('File upload error:', err);
+    if (err && typeof err === 'object') {
+      for (const key in err) {
+        if (Object.prototype.hasOwnProperty.call(err, key)) {
+          console.error(`  ${key}:`, err[key]);
+        }
+      }
+      try {
+        console.error('Full error JSON:', JSON.stringify(err, null, 2));
+      } catch (jsonErr) {
+        console.error('Error stringifying error:', jsonErr);
+      }
+    }
     res.status(500).json({ error: 'Failed to upload file', details: err.message, stack: err.stack });
   }
 });
