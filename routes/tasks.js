@@ -109,7 +109,7 @@ router.post('/:taskId/comments', auth, async (req, res) => {
       await Notification.create({
         user: mentionedUser._id,
         type: 'mention',
-        message: `${user?.name || 'Someone'} mentioned you in ${task ? task.title : ''}`,
+        message: `${user?.name || 'Someone'} mentioned you in Task ${task ? task.title : ''}`,
         entityId: task ? task._id : null,
         entityType: 'Task',
         byName: user?.name || 'User',
