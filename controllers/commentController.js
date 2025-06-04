@@ -33,6 +33,8 @@ async function createComment(req, res) {
     console.log('Mentioned usernames:', mentionedUsernames);
     // Find mentioned users in DB (case-insensitive)
     const User = require('../models/User');
+    const allUsers = await User.find({});
+    console.log('All users in DB:', allUsers.map(u => u.name));
     const mentionedUsers = mentionedUsernames.length
       ? await User.find({
           $or: mentionedUsernames.map(username => ({
