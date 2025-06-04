@@ -2,6 +2,7 @@ const Comment = require('../models/Comment');
 const { io } = require('../server');
 const ProjectUserRole = require('../models/ProjectUserRole');
 const { sendRoleBasedNotifications } = require('./notificationController');
+const Notification = require('../models/Notification');
 
 // Helper to get user role for a project
 async function getUserRole(userId, projectId) {
@@ -56,14 +57,20 @@ async function createComment(req, res) {
         project: taskDoc.project
       }
     });
-    // Notify mentioned users (optional, in-app notification)
-    // You can implement your own notification logic here
-    // Example: send notification to each mentioned user
-    /*
+    // Notify mentioned users (in-app notification)
     for (const user of mentionedUsers) {
-      // sendNotification(user._id, ...)
+      await Notification.create({
+        user: user._id,
+        type: 'mention',
+        message: `${comment.author?.name || 'Someone'} mentioned you in ${taskDoc.title}`,
+        entityId: taskDoc._id,
+        entityType: 'Task',
+        byName: comment.author?.name || 'User',
+        action: 'mentioned',
+        title: taskDoc.title,
+        time: new Date()
+      });
     }
-    */
     io.emit('comment:new', comment);
     res.status(201).json(comment);
   } catch (err) {
