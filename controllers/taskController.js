@@ -135,13 +135,13 @@ async function updateTask(req, res) {
     // Notify users for status update
     await sendRoleBasedNotifications({
       type: 'tasksEdited',
-      message: `Task updated: ${title}`,
+      message: `${updater ? updater.name : 'Someone'} moved ${task.title} to ${task.status}`,
       entityId: task._id,
       entityType: 'Task',
       projectId: task.project._id || task.project,
       byUser: req.user.userId,
       extra: {
-        action: 'updated',
+        action: 'moved',
         taskId: task._id,
         title: task.title,
         by: req.user.userId,

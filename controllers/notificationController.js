@@ -2,13 +2,16 @@ const Notification = require('../models/Notification');
 const NotificationSettings = require('../models/NotificationSettings');
 const { io } = require('../server');
 const ProjectUserRole = require('../models/ProjectUserRole');
+const User = require('../models/User');
 
 // Get all notifications for the authenticated user
 async function getNotifications(req, res) {
   try {
     const userId = req.user?.userId || req.mongoUser?._id;
     if (!userId) return res.status(401).json({ error: 'User not authenticated' });
-    const notifications = await Notification.find({ user: userId }).sort({ createdAt: -1 });
+    const notifications = await Notification.find({ user: userId })
+      .populate('sender', 'name email')
+      .sort({ createdAt: -1 });
     res.json(notifications);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -22,7 +25,7 @@ async function markAsRead(req, res) {
       req.params.id,
       { read: true },
       { new: true }
-    );
+    ).populate('sender', 'name email');
     if (!notification) return res.status(404).json({ error: 'Notification not found' });
     res.json(notification);
   } catch (err) {
@@ -36,6 +39,14 @@ async function sendProjectNotifications({ type, message, entityId, entityType, p
     console.log('sendProjectNotifications called:', { type, projectId, message, entityId, entityType, byUser, extra });
     const settings = await NotificationSettings.findOne({ projectId });
     if (!settings || !settings.roles) return;
+
+    // Get sender information
+    const sender = await User.findById(byUser);
+    if (!sender) {
+      console.error('Sender not found:', byUser);
+      return;
+    }
+
     // Find all users and their roles for this project
     const roles = await ProjectUserRole.find({ projectId });
     let userIds = [];
@@ -60,9 +71,13 @@ async function sendProjectNotifications({ type, message, entityId, entityType, p
         message,
         entityId,
         entityType,
+        sender: byUser,
         ...extra
       });
-      io.emit('notification:new', notification);
+      // Populate sender before emitting
+      const populatedNotification = await Notification.findById(notification._id)
+        .populate('sender', 'name email');
+      io.emit('notification:new', populatedNotification);
     }
   } catch (err) {
     console.error('Error sending project notifications:', err);
@@ -71,39 +86,54 @@ async function sendProjectNotifications({ type, message, entityId, entityType, p
 
 // Role-based notification sending
 async function sendRoleBasedNotifications({ type, message, entityId, entityType, projectId, byUser, extra = {} }) {
-  const roles = await ProjectUserRole.find({ projectId });
-  let userIds = [];
-  if (type === 'comments') {
-    userIds = roles.filter(
-      r => r.role === 'commenter' || (r.role === 'admin' && r.notifyAll)
-    ).map(r => r.userId.toString());
-  } else if (type === 'messages') {
-    userIds = roles.filter(
-      r => r.role === 'editor' || r.role === 'commenter' || (r.role === 'admin' && r.notifyAll)
-    ).map(r => r.userId.toString());
-  } else if (
-    type === 'tasksMoved' ||
-    type === 'tasksEdited' ||
-    type === 'tasksAdded'
-  ) {
-    userIds = roles.filter(
-      r => r.role === 'editor' || (r.role === 'admin' && r.notifyAll)
-    ).map(r => r.userId.toString());
-  } else if (type === 'adminOnly') {
-    userIds = roles.filter(r => r.role === 'admin' && r.notifyAll).map(r => r.userId.toString());
-  }
-  // Remove the user who triggered the action (optional)
-  if (byUser) userIds = userIds.filter(id => id !== byUser.toString());
-  for (const userId of userIds) {
-    const notification = await Notification.create({
-      user: userId,
-      type,
-      message,
-      entityId,
-      entityType,
-      ...extra
-    });
-    io.emit('notification:new', notification);
+  try {
+    // Get sender information
+    const sender = await User.findById(byUser);
+    if (!sender) {
+      console.error('Sender not found:', byUser);
+      return;
+    }
+
+    const roles = await ProjectUserRole.find({ projectId });
+    let userIds = [];
+    if (type === 'comments') {
+      userIds = roles.filter(
+        r => r.role === 'commenter' || (r.role === 'admin' && r.notifyAll)
+      ).map(r => r.userId.toString());
+    } else if (type === 'messages') {
+      userIds = roles.filter(
+        r => r.role === 'editor' || r.role === 'commenter' || (r.role === 'admin' && r.notifyAll)
+      ).map(r => r.userId.toString());
+    } else if (
+      type === 'tasksMoved' ||
+      type === 'tasksEdited' ||
+      type === 'tasksAdded'
+    ) {
+      userIds = roles.filter(
+        r => r.role === 'editor' || (r.role === 'admin' && r.notifyAll)
+      ).map(r => r.userId.toString());
+    } else if (type === 'adminOnly') {
+      userIds = roles.filter(r => r.role === 'admin' && r.notifyAll).map(r => r.userId.toString());
+    }
+    // Remove the user who triggered the action (optional)
+    if (byUser) userIds = userIds.filter(id => id !== byUser.toString());
+    for (const userId of userIds) {
+      const notification = await Notification.create({
+        user: userId,
+        type,
+        message,
+        entityId,
+        entityType,
+        sender: byUser,
+        ...extra
+      });
+      // Populate sender before emitting
+      const populatedNotification = await Notification.findById(notification._id)
+        .populate('sender', 'name email');
+      io.emit('notification:new', populatedNotification);
+    }
+  } catch (err) {
+    console.error('Error sending role-based notifications:', err);
   }
 }
 
