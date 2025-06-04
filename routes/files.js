@@ -38,7 +38,8 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
     res.status(201).json(file);
   } catch (err) {
     console.error('File upload error:', err);
-    res.status(500).json({ error: 'Failed to upload file' });
+    // Send error details for debugging
+    res.status(500).json({ error: 'Failed to upload file', details: err.message, stack: err.stack });
   }
 });
 
