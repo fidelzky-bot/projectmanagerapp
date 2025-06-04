@@ -15,11 +15,39 @@ cloudinary.config({
 
 const storage = new CloudinaryStorage({
   cloudinary,
-  params: {
-    folder: 'project_files',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'csv', 'zip', 'rar'],
-    resource_type: 'auto',
-  },
+  params: async (req, file) => {
+    const ext = file.originalname.split('.').pop().toLowerCase();
+    // List of common file types
+    const imageFormats = ['jpg','jpeg','png','gif','webp','bmp','tiff','svg','ico'];
+    const documentFormats = ['pdf','doc','docx','xls','xlsx','ppt','pptx','txt','rtf','csv','odt','ods','odp','md','log'];
+    const archiveFormats = ['zip','rar','7z','tar','gz','bz2'];
+    const audioFormats = ['mp3','wav','ogg','aac','flac','m4a'];
+    const videoFormats = ['mp4','avi','mov','wmv','flv','mkv','webm','mpeg','3gp'];
+    const otherFormats = ['json','xml','html','htm'];
+    const allFormats = [
+      ...imageFormats,
+      ...documentFormats,
+      ...archiveFormats,
+      ...audioFormats,
+      ...videoFormats,
+      ...otherFormats
+    ];
+    let resourceType = 'auto';
+    if ([...documentFormats, ...archiveFormats, ...otherFormats].includes(ext)) {
+      resourceType = 'raw';
+    } else if (audioFormats.includes(ext)) {
+      resourceType = 'video'; // Cloudinary treats audio as video
+    } else if (videoFormats.includes(ext)) {
+      resourceType = 'video';
+    } else if (imageFormats.includes(ext)) {
+      resourceType = 'image';
+    }
+    return {
+      folder: 'project_files',
+      allowed_formats: allFormats,
+      resource_type: resourceType,
+    };
+  }
 });
 const upload = multer({ storage, limits: { fileSize: 20 * 1024 * 1024 } }); // 20MB
 
