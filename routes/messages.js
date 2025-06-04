@@ -3,7 +3,7 @@ const router = express.Router();
 const clerkAuth = require('../middleware/auth');
 const syncUser = require('../middleware/syncUser');
 const messageController = require('../controllers/messageController');
-const Message = require('../models/message');
+const Message = require('../models/Message');
 
 // Send a new message
 router.post('/', clerkAuth, syncUser, messageController.sendMessage);
