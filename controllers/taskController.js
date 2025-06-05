@@ -54,7 +54,9 @@ async function createTask(req, res) {
           taskTitle: task.title,
           byName: creator ? creator.name : 'User',
           title: task.title
-        }
+        },
+        byName: creator ? creator.name : 'User',
+        title: task.title
       });
     }
     
@@ -74,7 +76,9 @@ async function createTask(req, res) {
         byName: creator ? creator.name : 'User',
         time: new Date(),
         project: task.project._id || task.project
-      }
+      },
+      byName: creator ? creator.name : 'User',
+      title: task.title
     });
     // Real-time: emit to all users in the project
     io.to(project.toString()).emit('task:added', task);
@@ -150,7 +154,10 @@ async function updateTask(req, res) {
           project: task.project._id || task.project,
           status: task.status,
           oldStatus: oldTask ? oldTask.status : undefined
-        }
+        },
+        byName: updater ? updater.name : 'User',
+        title: task.title,
+        status: task.status
       });
     } else {
       // 2. Other fields changed (updated)
@@ -170,7 +177,9 @@ async function updateTask(req, res) {
           time: new Date(),
           project: task.project._id || task.project,
           status: task.status
-        }
+        },
+        byName: updater ? updater.name : 'User',
+        title: task.title
       });
     }
     // 3. Assignment changed
@@ -187,7 +196,9 @@ async function updateTask(req, res) {
           taskTitle: task.title,
           byName: updater ? updater.name : 'User',
           title: task.title
-        }
+        },
+        byName: updater ? updater.name : 'User',
+        title: task.title
       });
     }
     // Real-time: emit to all users in the project
