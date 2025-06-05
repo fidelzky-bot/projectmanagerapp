@@ -75,7 +75,7 @@ async function createInvite(req, res) {
 }
 
 // Join a team with an invite token (for existing users)
-exports.joinTeamWithInviteToken = async function(req, res) {
+async function joinTeamWithInviteToken(req, res) {
   try {
     const { inviteToken } = req.body;
     const userId = req.user.userId;
@@ -117,7 +117,7 @@ exports.joinTeamWithInviteToken = async function(req, res) {
     console.error('Error joining team with invite token:', err);
     res.status(500).json({ error: err.message });
   }
-};
+}
 
 module.exports = {
   createInvite,
