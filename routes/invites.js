@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createInvite } = require('../controllers/inviteController');
+const { createInvite, joinTeamWithInviteToken } = require('../controllers/inviteController');
 const auth = require('../middleware/auth');
 const crypto = require('crypto');
 const Invite = require('../models/Invite');
@@ -42,5 +42,8 @@ router.post('/generate-link', auth, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// POST /api/invites/join - existing user joins a team with invite token
+router.post('/join', auth, joinTeamWithInviteToken);
 
 module.exports = router; 

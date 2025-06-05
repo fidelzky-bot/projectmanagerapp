@@ -4,6 +4,8 @@ const User = require('../models/User');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const Notification = require('../models/Notification');
+const Project = require('../models/Project');
+const ProjectUserRole = require('../models/ProjectUserRole');
 
 // Set up transporter (for Gmail)
 const transporter = nodemailer.createTransport({
@@ -71,5 +73,50 @@ async function createInvite(req, res) {
     res.status(500).json({ error: err.message });
   }
 }
+
+// Join a team with an invite token (for existing users)
+exports.joinTeamWithInviteToken = async function(req, res) {
+  try {
+    const { inviteToken } = req.body;
+    const userId = req.user.userId;
+    if (!inviteToken) return res.status(400).json({ error: 'Invite token required.' });
+    const Invite = require('../models/Invite');
+    const Team = require('../models/Team');
+    const User = require('../models/User');
+    const Project = require('../models/Project');
+    const ProjectUserRole = require('../models/ProjectUserRole');
+    const invite = await Invite.findOne({ token: inviteToken, status: 'pending' });
+    if (!invite) return res.status(400).json({ error: 'Invalid or expired invite token.' });
+    // Check if user is already a member
+    const team = await Team.findById(invite.team);
+    if (!team) return res.status(404).json({ error: 'Team not found.' });
+    if (team.members.includes(userId)) {
+      return res.status(400).json({ error: 'You are already a member of this team.' });
+    }
+    // Add user to team
+    await Team.findByIdAndUpdate(invite.team, { $addToSet: { members: userId } });
+    await User.findByIdAndUpdate(userId, { team: invite.team, role: 'member' });
+    // Add user to all projects of the team and assign default role
+    const projects = await Project.find({ team: invite.team });
+    for (const project of projects) {
+      await Project.findByIdAndUpdate(project._id, { $addToSet: { members: userId } });
+      await ProjectUserRole.findOneAndUpdate(
+        { userId, projectId: project._id },
+        { role: 'viewer' },
+        { upsert: true, new: true }
+      );
+    }
+    // Mark invite as accepted
+    invite.status = 'accepted';
+    await invite.save();
+    // Emit real-time event
+    const { io } = require('../server');
+    io.to(invite.team.toString()).emit('team:memberAdded', { userId });
+    res.json({ message: 'Joined team successfully.' });
+  } catch (err) {
+    console.error('Error joining team with invite token:', err);
+    res.status(500).json({ error: err.message });
+  }
+};
 
 module.exports = { createInvite }; 
