@@ -3,6 +3,7 @@ const Team = require('../models/Team');
 const User = require('../models/User');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const Notification = require('../models/Notification');
 
 // Set up transporter (for Gmail)
 const transporter = nodemailer.createTransport({

@@ -134,7 +134,7 @@ async function sendProjectNotifications({ type, message, entityId, entityType, p
       // Populate sender before emitting
       const populatedNotification = await Notification.findById(notification._id)
         .populate('sender', 'name email');
-      io.emit('notification:new', populatedNotification);
+      io.to(userId.toString()).emit('notification:new', populatedNotification);
     }
   } catch (err) {
     console.error('Error sending project notifications:', err);
@@ -187,7 +187,7 @@ async function sendRoleBasedNotifications({ type, message, entityId, entityType,
       // Populate sender before emitting
       const populatedNotification = await Notification.findById(notification._id)
         .populate('sender', 'name email');
-      io.emit('notification:new', populatedNotification);
+      io.to(userId.toString()).emit('notification:new', populatedNotification);
     }
   } catch (err) {
     console.error('Error sending role-based notifications:', err);
