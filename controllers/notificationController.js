@@ -176,7 +176,7 @@ async function sendRoleBasedNotifications({ type, message, entityId, entityType,
     // Remove the user who triggered the action (optional)
     if (byUser) userIds = userIds.filter(id => id !== byUser.toString());
     for (const userId of userIds) {
-      const notification = await Notification.create({
+      const notificationData = {
         user: userId,
         type,
         message,
@@ -184,7 +184,11 @@ async function sendRoleBasedNotifications({ type, message, entityId, entityType,
         entityType,
         sender: byUser,
         ...extra
-      });
+      };
+      // Ensure title and taskTitle are set for frontend display
+      if (extra && extra.title) notificationData.title = extra.title;
+      if (extra && extra.title) notificationData.taskTitle = extra.title;
+      const notification = await Notification.create(notificationData);
       // Populate sender before emitting
       const populatedNotification = await Notification.findById(notification._id)
         .populate('sender', 'name email avatar');

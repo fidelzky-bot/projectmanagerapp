@@ -10,6 +10,7 @@ const NotificationSchema = new mongoose.Schema({
   read: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
   taskTitle: { type: String },
+  title: { type: String },
   projectName: { type: String },
   newRole: { type: String }
 });

@@ -156,7 +156,6 @@ async function updateTask(req, res) {
           oldStatus: oldTask ? oldTask.status : undefined
         },
         byName: updater ? updater.name : 'User',
-        title: task.title,
         status: task.status
       });
     } else {
@@ -178,8 +177,7 @@ async function updateTask(req, res) {
           project: task.project._id || task.project,
           status: task.status
         },
-        byName: updater ? updater.name : 'User',
-        title: task.title
+        byName: updater ? updater.name : 'User'
       });
     }
     // 3. Assignment changed
