@@ -28,6 +28,18 @@ async function setUserRole(req, res) {
     if (project && project.team) {
       const { io } = require('../server');
       io.to(project.team.toString()).emit('project:roleUpdated', { projectId, userId, role });
+      // Send notification to the user whose role was changed
+      const { sendProjectNotifications } = require('./notificationController');
+      const sender = req.user.userId || req.mongoUser?._id;
+      await sendProjectNotifications({
+        type: 'role_changed',
+        message: `Your role was changed to ${role} in project ${project.name}`,
+        entityId: projectId,
+        entityType: 'Project',
+        projectId: projectId,
+        byUser: sender,
+        extra: { newRole: role, projectName: project.name }
+      });
     }
     res.json(updated);
   } catch (err) {
@@ -63,6 +75,18 @@ async function removeUserRole(req, res) {
     if (project && project.team) {
       const { io } = require('../server');
       io.to(project.team.toString()).emit('project:roleUpdated', { projectId, userId, role: null });
+      // Send notification to the user whose role was removed
+      const { sendProjectNotifications } = require('./notificationController');
+      const sender = req.user.userId || req.mongoUser?._id;
+      await sendProjectNotifications({
+        type: 'member_removed',
+        message: `You were removed from the project ${project.name}`,
+        entityId: projectId,
+        entityType: 'Project',
+        projectId: projectId,
+        byUser: sender,
+        extra: { projectName: project.name }
+      });
     }
     res.json({ message: 'Role removed' });
   } catch (err) {

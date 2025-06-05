@@ -220,14 +220,23 @@ async function deleteTask(req, res) {
     }
     await Task.findByIdAndDelete(req.params.id);
     const deleter = await User.findById(req.user.userId);
-    io.emit('notification', {
-      type: 'deleted',
-      taskId: task._id,
-      title: task.title,
-      by: req.user.userId,
-      byName: deleter ? deleter.name : 'User',
-      time: new Date(),
-      project: task.project._id || task.project
+    // Send notification to all relevant users
+    await sendRoleBasedNotifications({
+      type: 'task_deleted',
+      message: `${deleter ? deleter.name : 'Someone'} deleted the task: ${task.title}`,
+      entityId: task._id,
+      entityType: 'Task',
+      projectId: task.project._id || task.project,
+      byUser: req.user.userId,
+      extra: {
+        action: 'deleted',
+        taskId: task._id,
+        title: task.title,
+        by: req.user.userId,
+        byName: deleter ? deleter.name : 'User',
+        time: new Date(),
+        project: task.project._id || task.project
+      }
     });
     res.json({ message: 'Task deleted' });
   } catch (err) {

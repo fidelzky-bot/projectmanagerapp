@@ -5,6 +5,7 @@ const User = require('../models/User');
 const auth = require('../middleware/auth');
 const Project = require('../models/Project');
 const ProjectUserRole = require('../models/ProjectUserRole');
+const { sendProjectNotifications } = require('../controllers/notificationController');
 
 // Create a new team
 router.post('/', auth, async (req, res) => {
@@ -116,6 +117,16 @@ router.delete('/:teamId/members/:userId', auth, async (req, res) => {
     // Emit real-time event
     const { io } = require('../server');
     io.to(teamId).emit('team:memberRemoved', { userId });
+    // Send notification to the removed user
+    await sendProjectNotifications({
+      type: 'member_removed',
+      message: `You were removed from the team ${team.name}`,
+      entityId: teamId,
+      entityType: 'Team',
+      projectId: null,
+      byUser: requesterId,
+      extra: { projectName: team.name }
+    });
 
     res.json({ message: 'Member removed successfully' });
   } catch (err) {
