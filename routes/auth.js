@@ -5,7 +5,6 @@ const User = require('../models/User');
 const Invite = require('../models/Invite');
 const Project = require('../models/Project');
 const Team = require('../models/Team');
-const { io } = require('../server');
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
@@ -46,7 +45,8 @@ router.post('/register', async (req, res) => {
           { upsert: true, new: true }
         );
       }
-      // Emit real-time event to the team
+      // Emit real-time event to the team (require io here to avoid circular dependency)
+      const { io } = require('../server');
       io.to(invite.team.toString()).emit('team:memberAdded', { userId: user._id, name: user.name });
       return res.status(201).json({ message: 'User created' });
     }
