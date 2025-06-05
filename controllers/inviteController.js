@@ -67,6 +67,18 @@ async function createInvite(req, res) {
     });
 
     console.log('Invite email sent to:', email);
+    // Emit real-time event for new invite
+    const { io } = require('../server');
+    io.to(user.team.toString()).emit('team:inviteCreated', {
+      invite: {
+        _id: invite._id,
+        email: invite.email,
+        inviter: req.user.userId,
+        team: user.team,
+        status: invite.status,
+        createdAt: invite.createdAt
+      }
+    });
     res.status(201).json({ message: 'Invite sent!', inviteLink });
   } catch (err) {
     console.error('Error sending invite email:', err);
