@@ -240,6 +240,7 @@ async function deleteTask(req, res) {
     // Emit real-time event to the project team for task deletion
     const project = await Project.findById(task.project._id || task.project);
     if (project && project.team) {
+      console.log('[SOCKET] Emitting task:deleted', { team: project.team.toString(), taskId: task._id });
       io.to(project.team.toString()).emit('task:deleted', { taskId: task._id });
     }
     res.json({ message: 'Task deleted' });
