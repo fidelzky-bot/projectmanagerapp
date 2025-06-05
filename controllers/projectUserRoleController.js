@@ -22,6 +22,13 @@ async function setUserRole(req, res) {
       { role },
       { upsert: true, new: true }
     );
+    // Emit real-time event to the project team
+    const Project = require('../models/Project');
+    const project = await Project.findById(projectId);
+    if (project && project.team) {
+      const { io } = require('../server');
+      io.to(project.team.toString()).emit('project:roleUpdated', { projectId, userId, role });
+    }
     res.json(updated);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -50,6 +57,13 @@ async function removeUserRole(req, res) {
       return res.status(403).json({ error: 'Only project admins can manage roles.' });
     }
     await ProjectUserRole.findOneAndDelete({ userId, projectId });
+    // Emit real-time event to the project team
+    const Project = require('../models/Project');
+    const project = await Project.findById(projectId);
+    if (project && project.team) {
+      const { io } = require('../server');
+      io.to(project.team.toString()).emit('project:roleUpdated', { projectId, userId, role: null });
+    }
     res.json({ message: 'Role removed' });
   } catch (err) {
     res.status(400).json({ error: err.message });
