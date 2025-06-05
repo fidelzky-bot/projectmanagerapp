@@ -16,7 +16,13 @@ const app = express();
 const server = http.createServer(app);
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    'https://jmgprojectmanagerapp.netlify.app',
+    'http://localhost:3000'
+  ],
+  credentials: true
+}));
 app.use(express.json());
 
 // MongoDB Connection
