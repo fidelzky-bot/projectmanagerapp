@@ -5,6 +5,7 @@ const User = require('../models/User');
 const Invite = require('../models/Invite');
 const Project = require('../models/Project');
 const Team = require('../models/Team');
+const { io } = require('../server');
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
@@ -33,6 +34,20 @@ router.post('/register', async (req, res) => {
       // Mark invite as accepted
       invite.status = 'accepted';
       await invite.save();
+
+      // Add user to all projects of the team and assign default role
+      const projects = await Project.find({ team: invite.team });
+      const ProjectUserRole = require('../models/ProjectUserRole');
+      for (const project of projects) {
+        await Project.findByIdAndUpdate(project._id, { $addToSet: { members: user._id } });
+        await ProjectUserRole.findOneAndUpdate(
+          { userId: user._id, projectId: project._id },
+          { role: 'viewer' },
+          { upsert: true, new: true }
+        );
+      }
+      // Emit real-time event to the team
+      io.to(invite.team.toString()).emit('team:memberAdded', { userId: user._id, name: user.name });
       return res.status(201).json({ message: 'User created' });
     }
 

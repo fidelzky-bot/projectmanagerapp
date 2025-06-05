@@ -5,6 +5,7 @@ const auth = require('../middleware/auth');
 const crypto = require('crypto');
 const Invite = require('../models/Invite');
 const User = require('../models/User');
+const { io } = require('../server');
 
 // POST /api/invites - create and send an invite
 router.post('/', auth, createInvite);
@@ -31,6 +32,9 @@ router.post('/generate-link', auth, async (req, res) => {
 
     // Create invite link
     const inviteLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/index.html?invite=${token}`;
+
+    // Emit real-time event to all team members
+    io.to(user.team.toString()).emit('team:inviteLinkGenerated', { inviteLink });
     
     res.json({ inviteLink });
   } catch (err) {
