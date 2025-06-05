@@ -44,8 +44,17 @@ router.get('/me', auth, async (req, res) => {
 
 // Update current user profile
 router.put('/me', auth, async (req, res) => {
-  const { name, contact, avatar, jobTitle, bio, birthday, occupation, hobby } = req.body;
-  const update = { name, contact, jobTitle, bio, birthday, occupation, hobby };
+  const { name, phone, contact, avatar, jobTitle, bio, birthday, occupation, hobby, nickname } = req.body;
+  const update = {
+    name,
+    contact: phone || contact, // Prefer phone if provided
+    jobTitle,
+    bio,
+    birthday,
+    occupation,
+    hobby,
+    nickname
+  };
   if (avatar !== undefined) update.avatar = avatar;
   const user = await User.findByIdAndUpdate(
     req.user.userId,
@@ -67,7 +76,7 @@ router.post('/me/avatar', auth, upload.single('avatar'), async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     // Return all relevant profile fields
-    const users = await User.find({}, 'name email avatar bio occupation birthday hobby jobTitle contact lastActive');
+    const users = await User.find({}, 'name nickname email avatar bio occupation birthday hobby jobTitle contact lastActive');
     res.json(users);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch users' });
@@ -78,7 +87,7 @@ router.get('/', async (req, res) => {
 router.get('/byProject/:projectId', async (req, res) => {
   try {
     // Populate all relevant profile fields
-    const project = await Project.findById(req.params.projectId).populate('members', 'name email avatar bio occupation birthday hobby jobTitle contact lastActive');
+    const project = await Project.findById(req.params.projectId).populate('members', 'name nickname email avatar bio occupation birthday hobby jobTitle contact lastActive');
     if (!project) return res.status(404).json({ error: 'Project not found' });
     res.json(project.members);
   } catch (err) {
