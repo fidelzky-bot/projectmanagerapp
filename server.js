@@ -39,7 +39,10 @@ mongoose.connect(process.env.MONGO_URI, {
 // Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL,
+    origin: [
+      'https://jmgprojectmanagerapp.netlify.app',
+      'http://localhost:3000'
+    ],
     credentials: true
   }
 });
