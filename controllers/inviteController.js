@@ -11,7 +11,9 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
-  }
+  },
+  secure: true,
+  debug: true
 });
 
 // Create and send a team invite
@@ -48,11 +50,11 @@ async function createInvite(req, res) {
     await invite.save();
 
     // Create invite link
-    const inviteLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/index.html?inviteToken=${token}`;
+    const inviteLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/index.html?invite=${token}`;
     
     // Send email
     await transporter.sendMail({
-      from: 'JMG Project Manager <' + process.env.EMAIL_USER + '>',
+      from: '"JMG Project Manager" <' + process.env.EMAIL_USER + '>',
       to: email,
       subject: 'You are invited to join a team!',
       html: `
