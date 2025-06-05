@@ -102,6 +102,13 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Listen for avatar updates
+  socket.on('user:updateAvatar', (data) => {
+    if (data && data.userId && data.avatar) {
+      io.emit('user:avatarUpdated', data);
+    }
+  });
+
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
   });
