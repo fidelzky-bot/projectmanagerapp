@@ -9,6 +9,7 @@ const multer = require('multer');
 const path = require('path');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const { io } = require('../server');
 
 // Cloudinary config
 cloudinary.config({
@@ -61,6 +62,10 @@ router.put('/me', auth, async (req, res) => {
     update,
     { new: true }
   ).select('-password');
+  // Emit avatar update event
+  if (avatar !== undefined && io) {
+    io.emit('user:avatarUpdated', { userId: user._id, avatar: user.avatar });
+  }
   res.json(user);
 });
 
