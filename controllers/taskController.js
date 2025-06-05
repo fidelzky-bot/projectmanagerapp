@@ -3,7 +3,7 @@ const { io } = require('../server');
 const User = require('../models/User');
 const ProjectUserRole = require('../models/ProjectUserRole');
 const Notification = require('../models/Notification');
-const { sendRoleBasedNotifications } = require('./notificationController');
+const { sendRoleBasedNotifications, sendProjectNotifications } = require('./notificationController');
 
 // Helper to get user role for a project
 async function getUserRole(userId, projectId) {
@@ -42,21 +42,16 @@ async function createTask(req, res) {
     
     // Create notification for assigned user if any
     if (assignedUser) {
-      await sendRoleBasedNotifications({
-        type: 'tasksAdded',
-        message: `You have been assigned to task: ${title}`,
+      await sendProjectNotifications({
+        type: 'task_assigned',
+        message: `${creator ? creator.name : 'Someone'} assigned you to ${task.title}`,
         entityId: task._id,
         entityType: 'Task',
         projectId: project,
         byUser: req.user.userId,
         extra: {
-          action: 'assigned',
-          taskId: task._id,
-          title: task.title,
-          by: req.user.userId,
-          byName: creator ? creator.name : 'User',
-          time: new Date(),
-          project: task.project._id || task.project
+          assignedTo: assignedUser,
+          taskTitle: task.title
         }
       });
     }
@@ -120,7 +115,6 @@ async function updateTask(req, res) {
     const oldTask = await Task.findById(req.params.id);
     if (!oldTask) return res.status(404).json({ error: 'Task not found' });
     const userRole = await getUserRole(req.user.userId, oldTask.project);
-    // Only admin/editor can update, but only admin/editor can move/edit, and only admin can delete
     if (userRole !== 'admin' && userRole !== 'editor') {
       return res.status(403).json({ error: 'You do not have permission to update tasks.' });
     }
@@ -131,27 +125,65 @@ async function updateTask(req, res) {
     ).populate('assignedTo project');
     if (!task) return res.status(404).json({ error: 'Task not found' });
     const updater = await User.findById(req.user.userId);
-    
-    // Notify users for status update
-    await sendRoleBasedNotifications({
-      type: 'tasksEdited',
-      message: `Task updated: ${title}`,
-      entityId: task._id,
-      entityType: 'Task',
-      projectId: task.project._id || task.project,
-      byUser: req.user.userId,
-      extra: {
-        action: 'updated',
-        taskId: task._id,
-        title: task.title,
-        by: req.user.userId,
-        byName: updater ? updater.name : 'User',
-        time: new Date(),
-        project: task.project._id || task.project,
-        status: task.status,
-        oldStatus: oldTask ? oldTask.status : undefined
-      }
-    });
+
+    // Notification logic
+    const notifications = [];
+    // 1. Status changed (moved)
+    if (status && oldTask.status !== status) {
+      await sendRoleBasedNotifications({
+        type: 'tasksMoved',
+        message: `${updater ? updater.name : 'Someone'} moved ${task.title} to ${task.status}`,
+        entityId: task._id,
+        entityType: 'Task',
+        projectId: task.project._id || task.project,
+        byUser: req.user.userId,
+        extra: {
+          action: 'moved',
+          taskId: task._id,
+          title: task.title,
+          by: req.user.userId,
+          byName: updater ? updater.name : 'User',
+          time: new Date(),
+          project: task.project._id || task.project,
+          status: task.status,
+          oldStatus: oldTask ? oldTask.status : undefined
+        }
+      });
+    } else {
+      // 2. Other fields changed (updated)
+      await sendRoleBasedNotifications({
+        type: 'tasksEdited',
+        message: `${updater ? updater.name : 'Someone'} updated ${task.title}`,
+        entityId: task._id,
+        entityType: 'Task',
+        projectId: task.project._id || task.project,
+        byUser: req.user.userId,
+        extra: {
+          action: 'updated',
+          taskId: task._id,
+          title: task.title,
+          by: req.user.userId,
+          byName: updater ? updater.name : 'User',
+          time: new Date(),
+          project: task.project._id || task.project
+        }
+      });
+    }
+    // 3. Assignment changed
+    if (assignedTo && (!oldTask.assignedTo || oldTask.assignedTo.toString() !== assignedTo)) {
+      await sendProjectNotifications({
+        type: 'task_assigned',
+        message: `${updater ? updater.name : 'Someone'} assigned you to ${task.title}`,
+        entityId: task._id,
+        entityType: 'Task',
+        projectId: task.project._id || task.project,
+        byUser: req.user.userId,
+        extra: {
+          assignedTo,
+          taskTitle: task.title
+        }
+      });
+    }
 
     io.emit('task:updated', task);
     res.json(task);

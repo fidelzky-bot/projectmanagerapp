@@ -1,7 +1,7 @@
 const Comment = require('../models/Comment');
 const { io } = require('../server');
 const ProjectUserRole = require('../models/ProjectUserRole');
-const { sendRoleBasedNotifications } = require('./notificationController');
+const { sendRoleBasedNotifications, sendProjectNotifications } = require('./notificationController');
 const Notification = require('../models/Notification');
 
 // Helper to get user role for a project
@@ -31,11 +31,11 @@ async function createComment(req, res) {
     while ((match = mentionRegex.exec(text)) !== null) {
       mentionedUsernames.push(match[1]);
     }
-    console.log('Mentioned usernames:', mentionedUsernames);
+    console.log('[Mention Debug] Mentioned usernames:', mentionedUsernames);
     // Find mentioned users in DB (case-insensitive)
     const User = require('../models/User');
     const allUsers = await User.find({});
-    console.log('All users in DB:', allUsers.map(u => u.name));
+    console.log('[Mention Debug] All users in DB:', allUsers.map(u => u.name));
     const mentionedUsers = mentionedUsernames.length
       ? await User.find({
           $or: mentionedUsernames.map(username => ({
@@ -43,7 +43,7 @@ async function createComment(req, res) {
           }))
         })
       : [];
-    console.log('Mentioned users found:', mentionedUsers.map(u => u.name));
+    console.log('[Mention Debug] Mentioned users found:', mentionedUsers.map(u => u.name));
     const mentions = mentionedUsers.map(u => u._id);
     const comment = new Comment({ text, author, task, mentions });
     await comment.save();
@@ -68,16 +68,20 @@ async function createComment(req, res) {
     });
     // Notify mentioned users (in-app notification)
     for (const user of mentionedUsers) {
-      await Notification.create({
+      console.log('[Mention Debug] Creating mention notification for:', user.name);
+      const notif = await Notification.create({
         user: user._id,
-        type: 'mention',
+        type: 'task_mentioned',
         message: `${comment.author?.name || 'Someone'} mentioned you in ${taskDoc.title}`,
         entityId: taskDoc._id,
         entityType: 'Task',
-        byName: comment.author?.name || 'User',
-        action: 'mentioned',
-        title: taskDoc.title,
-        time: new Date()
+        projectName: taskDoc.project.name || '',
+        taskTitle: taskDoc.title,
+        sender: author
+      });
+      io.emit('notification:new', {
+        ...notif.toObject(),
+        sender: { _id: author, name: comment.author?.name || 'Someone' }
       });
     }
     io.emit('comment:new', comment);

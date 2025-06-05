@@ -8,6 +8,8 @@ const notificationSettingsController = require('../controllers/notificationSetti
 router.get('/', auth, notificationController.getNotifications);
 // Mark a notification as read
 router.patch('/:id/read', auth, notificationController.markAsRead);
+// Mark all notifications as read
+router.put('/mark-all-read', auth, notificationController.markAllAsRead);
 // Notification settings for a project (per-role)
 router.get('/settings/:projectId', auth, notificationSettingsController.getSettings);
 router.put('/settings/:projectId', auth, notificationSettingsController.updateSettings);

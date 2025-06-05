@@ -51,7 +51,7 @@ async function createInvite(req, res) {
     
     // Send email
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: 'JMG Project Manager <' + process.env.EMAIL_USER + '>',
       to: email,
       subject: 'You are invited to join a team!',
       html: `

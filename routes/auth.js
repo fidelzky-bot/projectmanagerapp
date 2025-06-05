@@ -33,7 +33,19 @@ router.post('/register', async (req, res) => {
       // Mark invite as accepted
       invite.status = 'accepted';
       await invite.save();
+      return res.status(201).json({ message: 'User created' });
     }
+
+    // If no invite token, auto-create a team
+    const team = await Team.create({
+      name: `${name}'s Team`,
+      owner: user._id,
+      members: [user._id]
+    });
+    await User.findByIdAndUpdate(user._id, {
+      team: team._id,
+      role: 'admin'
+    });
 
     res.status(201).json({ message: 'User created' });
   } catch (err) {

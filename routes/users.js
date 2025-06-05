@@ -31,10 +31,15 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } }); // 5M
 
 // Get current authenticated user (from MongoDB)
 router.get('/me', auth, async (req, res) => {
-  // Update lastActive
-  await User.findByIdAndUpdate(req.user.userId, { lastActive: new Date() });
-  const user = await User.findById(req.user.userId).select('-password');
-  res.json(user);
+  try {
+    // Update lastActive
+    await User.findByIdAndUpdate(req.user.userId, { lastActive: new Date() });
+    const user = await User.findById(req.user.userId).select('-password');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch user' });
+  }
 });
 
 // Update current user profile
@@ -61,7 +66,8 @@ router.post('/me/avatar', auth, upload.single('avatar'), async (req, res) => {
 // Get all users (for assignee dropdown)
 router.get('/', async (req, res) => {
   try {
-    const users = await User.find({}, 'name email');
+    // Return all relevant profile fields
+    const users = await User.find({}, 'name email avatar bio occupation birthday hobby jobTitle contact lastActive');
     res.json(users);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch users' });
@@ -71,11 +77,23 @@ router.get('/', async (req, res) => {
 // Get users for a specific project
 router.get('/byProject/:projectId', async (req, res) => {
   try {
-    const project = await Project.findById(req.params.projectId).populate('members', 'name email lastActive');
+    // Populate all relevant profile fields
+    const project = await Project.findById(req.params.projectId).populate('members', 'name email avatar bio occupation birthday hobby jobTitle contact lastActive');
     if (!project) return res.status(404).json({ error: 'Project not found' });
     res.json(project.members);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch team members' });
+  }
+});
+
+// Get a user by ID (all profile fields)
+router.get('/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('-password');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch user' });
   }
 });
 
