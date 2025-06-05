@@ -4,6 +4,7 @@ const User = require('../models/User');
 const ProjectUserRole = require('../models/ProjectUserRole');
 const Notification = require('../models/Notification');
 const { sendRoleBasedNotifications, sendProjectNotifications } = require('./notificationController');
+const Project = require('../models/Project');
 
 // Helper to get user role for a project
 async function getUserRole(userId, projectId) {
@@ -236,6 +237,11 @@ async function deleteTask(req, res) {
         project: task.project._id || task.project
       }
     });
+    // Emit real-time event to the project team for task deletion
+    const project = await Project.findById(task.project._id || task.project);
+    if (project && project.team) {
+      io.to(project.team.toString()).emit('task:deleted', { taskId: task._id });
+    }
     res.json({ message: 'Task deleted' });
   } catch (err) {
     res.status(500).json({ error: err.message });
