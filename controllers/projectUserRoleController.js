@@ -32,7 +32,7 @@ async function setUserRole(req, res) {
 async function getProjectRoles(req, res) {
   try {
     const { projectId } = req.params;
-    const roles = await ProjectUserRole.find({ projectId }).populate('userId', 'name email');
+    const roles = await ProjectUserRole.find({ projectId }).populate('userId', 'name avatar');
     res.json(roles);
   } catch (err) {
     res.status(400).json({ error: err.message });

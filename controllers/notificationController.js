@@ -10,7 +10,7 @@ async function getNotifications(req, res) {
     const userId = req.user?.userId || req.mongoUser?._id;
     if (!userId) return res.status(401).json({ error: 'User not authenticated' });
     const notifications = await Notification.find({ user: userId })
-      .populate('sender', 'name email')
+      .populate('sender', 'name email avatar')
       .sort({ createdAt: -1 });
     res.json(notifications);
   } catch (err) {
@@ -25,7 +25,7 @@ async function markAsRead(req, res) {
       req.params.id,
       { read: true },
       { new: true }
-    ).populate('sender', 'name email');
+    ).populate('sender', 'name email avatar');
     if (!notification) return res.status(404).json({ error: 'Notification not found' });
     res.json(notification);
   } catch (err) {
@@ -133,7 +133,7 @@ async function sendProjectNotifications({ type, message, entityId, entityType, p
       });
       // Populate sender before emitting
       const populatedNotification = await Notification.findById(notification._id)
-        .populate('sender', 'name email');
+        .populate('sender', 'name email avatar');
       io.to(userId.toString()).emit('notification:new', populatedNotification);
     }
   } catch (err) {
@@ -186,7 +186,7 @@ async function sendRoleBasedNotifications({ type, message, entityId, entityType,
       });
       // Populate sender before emitting
       const populatedNotification = await Notification.findById(notification._id)
-        .populate('sender', 'name email');
+        .populate('sender', 'name email avatar');
       io.to(userId.toString()).emit('notification:new', populatedNotification);
     }
   } catch (err) {

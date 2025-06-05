@@ -32,7 +32,7 @@ async function createComment(req, res) {
     }
     const comment = new Comment({ text, author, task, mentions: Array.isArray(mentions) ? mentions : [] });
     await comment.save();
-    await comment.populate('author');
+    await comment.populate('author', 'name avatar');
     // Notify commenters and admins (if opted in)
     await sendRoleBasedNotifications({
       type: 'comments',
@@ -81,7 +81,7 @@ async function getComments(req, res) {
   try {
     const { taskId } = req.query;
     if (!taskId) return res.status(400).json({ error: 'taskId is required' });
-    const comments = await Comment.find({ task: taskId }).populate('author');
+    const comments = await Comment.find({ task: taskId }).populate('author', 'name avatar');
     res.json(comments);
   } catch (err) {
     res.status(500).json({ error: err.message });
