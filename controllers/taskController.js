@@ -51,7 +51,9 @@ async function createTask(req, res) {
         byUser: req.user.userId,
         extra: {
           assignedTo: assignedUser,
-          taskTitle: task.title
+          taskTitle: task.title,
+          byName: creator ? creator.name : 'User',
+          title: task.title
         }
       });
     }
@@ -74,8 +76,9 @@ async function createTask(req, res) {
         project: task.project._id || task.project
       }
     });
-
-    io.emit('task:updated', task);
+    // Real-time: emit to all users in the project
+    io.to(project.toString()).emit('task:added', task);
+    io.to(project.toString()).emit('task:updated', task);
     res.status(201).json(task);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -180,12 +183,14 @@ async function updateTask(req, res) {
         byUser: req.user.userId,
         extra: {
           assignedTo,
-          taskTitle: task.title
+          taskTitle: task.title,
+          byName: updater ? updater.name : 'User',
+          title: task.title
         }
       });
     }
-
-    io.emit('task:updated', task);
+    // Real-time: emit to all users in the project
+    io.to((task.project._id || task.project).toString()).emit('task:updated', task);
     res.json(task);
   } catch (err) {
     res.status(400).json({ error: err.message });

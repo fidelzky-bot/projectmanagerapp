@@ -42,10 +42,25 @@ io.on('connection', (socket) => {
   console.log('A user connected:', socket.id, 'Origin:', socket.handshake.headers.origin);
 
   // Listen for user to join their own room for notifications
-  socket.on('join', (userId) => {
+  socket.on('join', async (userId) => {
     if (userId) {
       socket.join(userId.toString());
       console.log('User joined room:', userId);
+      // Also join all project rooms for real-time task updates
+      try {
+        const user = await User.findById(userId).populate('team');
+        if (user && user.team) {
+          // Find all projects for the user's team
+          const Project = require('./models/Project');
+          const projects = await Project.find({ team: user.team._id || user.team });
+          projects.forEach(project => {
+            socket.join(project._id.toString());
+            console.log(`User ${userId} joined project room: ${project._id}`);
+          });
+        }
+      } catch (err) {
+        console.error('Error joining project rooms:', err);
+      }
     }
   });
 
