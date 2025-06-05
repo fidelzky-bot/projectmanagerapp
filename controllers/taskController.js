@@ -168,7 +168,8 @@ async function updateTask(req, res) {
           by: req.user.userId,
           byName: updater ? updater.name : 'User',
           time: new Date(),
-          project: task.project._id || task.project
+          project: task.project._id || task.project,
+          status: task.status
         }
       });
     }
