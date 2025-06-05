@@ -23,7 +23,7 @@ const transporter = nodemailer.createTransport({
 async function createInvite(req, res) {
   console.log('createInvite called', req.body);
   try {
-    const { email } = req.body;
+    const { email, type = 'signup' } = req.body;
     if (!email) {
       return res.status(400).json({ error: 'Email is required.' });
     }
@@ -52,8 +52,8 @@ async function createInvite(req, res) {
     });
     await invite.save();
 
-    // Create invite link
-    const inviteLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/index.html?invite=${token}`;
+    // Create invite link with type param
+    const inviteLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/index.html?invite=${token}&type=${type}`;
     
     // Send email
     await transporter.sendMail({
@@ -61,7 +61,7 @@ async function createInvite(req, res) {
       to: email,
       subject: 'You are invited to join a team!',
       html: `
-        <p>You have been invited to join a team. Click <a href="${inviteLink}">here</a> to sign up!</p>
+        <p>You have been invited to join a team. Click <a href="${inviteLink}">here</a> to ${type === 'signin' ? 'sign in' : 'sign up'}!</p>
         <p>Once you join, you'll have access to all team projects and can collaborate with team members.</p>
       `
     });
