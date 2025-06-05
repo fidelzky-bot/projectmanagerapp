@@ -39,7 +39,7 @@ const io = new Server(server, {
 });
 
 io.on('connection', (socket) => {
-  console.log('A user connected:', socket.id);
+  console.log('A user connected:', socket.id, 'Origin:', socket.handshake.headers.origin);
 
   // Listen for user to join their own room for notifications
   socket.on('join', (userId) => {
