@@ -119,4 +119,7 @@ exports.joinTeamWithInviteToken = async function(req, res) {
   }
 };
 
-module.exports = { createInvite }; 
+module.exports = {
+  createInvite,
+  joinTeamWithInviteToken
+}; 
