@@ -65,20 +65,6 @@ router.post('/:taskId/comments', auth, async (req, res) => {
     });
     // Mention notifications (real-time to mentioned users only)
     const Notification = require('../models/Notification');
-<<<<<<< HEAD
-    for (const mentionedUser of mentionedUsers) {
-      await Notification.create({
-        user: mentionedUser._id,
-        type: 'mention',
-        message: `${user?.name || 'Someone'} mentioned you in Task ${task ? task.title : ''}`,
-        entityId: task ? task._id : null,
-        entityType: 'Task',
-        byName: user?.name || 'User',
-        action: 'mentioned',
-        title: task ? task.title : '',
-        time: new Date()
-      });
-=======
     if (Array.isArray(mentions)) {
       for (const mentionedUserId of mentions) {
         const notif = await Notification.create({
@@ -95,7 +81,6 @@ router.post('/:taskId/comments', auth, async (req, res) => {
           sender: { _id: req.user.userId, name: user ? user.name : 'Someone' }
         });
       }
->>>>>>> 13cdc9c195437c5894946ac332816fcfb3844324
     }
     res.status(201).json(comment);
   } catch (err) {
