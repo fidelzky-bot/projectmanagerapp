@@ -59,6 +59,9 @@ io.on('connection', (socket) => {
       try {
         const user = await User.findById(userId).populate('team');
         if (user && user.team) {
+          // Join the team room for real-time team events
+          socket.join(user.team._id.toString());
+          console.log(`User ${userId} joined team room: ${user.team._id}`);
           // Find all projects for the user's team
           const Project = require('./models/Project');
           const projects = await Project.find({ team: user.team._id || user.team });
